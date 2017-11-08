@@ -2,6 +2,9 @@
 Actinide
 ########
 
+.. image:: https://circleci.com/gh/ojacobson/actinide.svg?style=svg
+    :target: https://circleci.com/gh/ojacobson/actinide
+
 An embeddable lisp for Python applications.
 
 I had `an application`_ in which the ability to extend the application from
