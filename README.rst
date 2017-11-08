@@ -42,6 +42,12 @@ fill up RAM, and drain your battery.
 .. _lispy: http://norvig.com/lispy.html
 
 ************
+Requirements
+************
+
+Actinide requires Python 3.6 or later.
+
+************
 Installation
 ************
 
@@ -57,10 +63,13 @@ Or, if you prefer, add ``actinide`` to your application's ``Pipfile`` or
 Freestanding REPL
 *****************
 
-The Actinide interpreter can be started interactively using the `actinide-repl`
-command. In this mode, Actinide forms can be entered interactively. The REPL
-will immediately evaluate each top-level form, then print the result of that
-evaluation.
+**Note: this section is presently incorrect - the ``actinide-repl`` command
+instead contains a test harness for the tokenizer.**
+
+The Actinide interpreter can be started interactively using the
+``actinide-repl`` command. In this mode, Actinide forms can be entered
+interactively. The REPL will immediately evaluate each top-level form, then
+print the result of that evaluation.
 
 To exit the REPL, type an end-of-file (Ctrl-D on most OSes, Ctrl-Z on Windows).
 
