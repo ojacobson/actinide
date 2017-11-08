@@ -98,9 +98,11 @@ def tokenize_eof(lookahead, port):
 # This never produces a token.
 def tokenize_comment(lookahead, port):
     next = port.read(1)
-    if next != '\n':
-        return None, next, tokenize_comment
-    return None, next, tokenize_any
+    if next == '':
+        return None, next, tokenize_any
+    if next == '\n':
+        return None, next, tokenize_any
+    return None, next, tokenize_comment
 
 # Consumes the lookahead and packages it up as a Syntax token. This is generally
 # appropriate for the ``(`` and ``)`` syntactic elements.
@@ -129,7 +131,7 @@ def tokenize_whitespace(lookahead, port):
 def tokenize_symbol(lookahead, port):
     next = port.read(1)
     if next == '':
-        return Symbol(lookahead), next, tokenize_eof
+        return Symbol(lookahead), next, tokenize_any
     if next in '"(); \t\n':
         return Symbol(lookahead), next, tokenize_any
     return None, lookahead + next, tokenize_symbol
