@@ -67,7 +67,7 @@ Freestanding REPL
 *****************
 
 **Note: this section is presently incorrect - the ``actinide-repl`` command
-instead contains a test harness for the tokenizer.**
+doesn't exist.**
 
 The Actinide interpreter can be started interactively using the
 ``actinide-repl`` command. In this mode, Actinide forms can be entered

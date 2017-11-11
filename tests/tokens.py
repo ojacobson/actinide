@@ -48,6 +48,10 @@ def whitespace_characters():
 def tokens():
     return one_of(symbols(), strings(), open_parens(), close_parens())
 
+# Generates a string which may not be empty, but which does not contain a token.
+def nontokens():
+    return one_of(whitespace(), comments(), just(''))
+
 # Generates at least one character of whitespace.
 def whitespace():
     return text(whitespace_characters(), min_size=1)
