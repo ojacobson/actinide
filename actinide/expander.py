@@ -30,5 +30,5 @@ def expand(form, symbols):
         if len(body) != 1:
             body = [list(symbols['begin'], *body)]
         args = [formals, *body]
-    form = list(symb, *[expand(subform, symbols) for subform in args])
+    form = list(expand(symb), *[expand(subform, symbols) for subform in args])
     return form
