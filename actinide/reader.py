@@ -10,6 +10,10 @@ from .types import *
 class SyntaxError(Exception):
     pass
 
+# Returned on ``read`` if it has reached the end of the input. This is a
+# special, non-interned token guaranteed to be unequal to any other token.
+EOF = Symbol('#<end-of-input>')
+
 # Reads one form from a port. This will consume all of the tokens included in
 # the form, but leave trailing data after the final token untouched.
 #
@@ -23,7 +27,7 @@ class SyntaxError(Exception):
 def read(port, symbols):
     head = read_token(port)
     if head is None:
-        return None
+        return EOF
     if head == ')':
         raise SyntaxError("Unexpected ')'")
     if head == '(':

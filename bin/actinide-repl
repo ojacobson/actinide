@@ -3,6 +3,7 @@
 import sys
 
 import actinide as a
+import actinide.reader as ar
 import actinide.ports as ap
 import actinide.types as at
 
@@ -12,7 +13,7 @@ def repl(session, port):
             sys.stdout.write("> ")
             sys.stdout.flush()
             form = session.read(port)
-            if form is None:
+            if form is ar.EOF:
                 print()
                 return 0
             results = session.eval(form)
