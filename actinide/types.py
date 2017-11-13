@@ -257,3 +257,5 @@ def display(value):
         return display_decimal(value)
     if procedure_p(value):
         return display_procedure(value)
+    # Give up and use repr to avoid printing `None`.
+    return repr(value)
