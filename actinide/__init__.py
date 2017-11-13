@@ -1,4 +1,4 @@
-from . import builtin, ports, symbol_table, reader, evaluator, types
+from . import builtin, ports, symbol_table, reader, expander, evaluator, types
 
 class Session(object):
     def __init__(self):
@@ -8,7 +8,8 @@ class Session(object):
     def read(self, port):
         if types.string_p(port):
             port = ports.string_to_input_port(port)
-        return reader.read(port, self.symbols)
+        form = reader.read(port, self.symbols)
+        return expander.expand(form, self.symbols)
 
     def eval(self, form):
         cps = evaluator.eval(form, self.environment, self.symbols, None)

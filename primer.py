@@ -9,10 +9,10 @@ program = session.read("""
     1
     1.0
     "Hello"
-    (define a
-        (lambda (b) (values 1 2.2 "three" a b)))
-    (define pp
-        (lambda () (pp)))
+    (define (a b)
+        (values 1 2.2 "three" a b))
+    (define (pp) (pp))
+
     (print (a "foo"))
     (print (eval (list (symbol "a") "bar")))
     (print 0 (values 1 2 3) 4 5)
