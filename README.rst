@@ -227,11 +227,12 @@ Actinide functions returne a tuple of results rather than a single value:
 ::
 
     session.run('''
-        ; Set a variable
-        (define x 5)
+        (begin
+            ; Set a variable
+            (define x 5)
 
-        ; Define a function that reads the variable
-        (define (get-x) x)
+            ; Define a function that reads the variable
+            (define (get-x) x))
     ''')
 
     get_x = session.get('get-x')
