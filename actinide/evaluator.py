@@ -136,7 +136,7 @@ def invoke(continuation):
 def eval(value, environment, symbols, continuation):
     if t.symbol_p(value):
         return symbol(value, environment, continuation)
-    if not t.list_p(value):
+    if t.nil_p(value) or not t.list_p(value):
         return literal(value, continuation)
     # Special forms (all of which begin with a special symbol, discarded here)
     if t.head(value) == symbols['if']:

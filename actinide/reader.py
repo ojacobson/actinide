@@ -23,7 +23,7 @@ class SyntaxError(Exception):
 def read(port, symbols):
     head = read_token(port)
     if head is None:
-        raise SyntaxError("Unexpected end of input")
+        return None
     if head == ')':
         raise SyntaxError("Unexpected ')'")
     if head == '(':

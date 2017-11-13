@@ -9,19 +9,25 @@ from decimal import Decimal, InvalidOperation
 from . import evaluator as e
 
 from .environment import *
+from .builtin import make_registry
+
+ACTINIDE_BINDINGS, ACTINIDE_VOIDS, ACTINIDE_FNS, ACTINIDE_BUILTINS, bind, void, fn, builtin = make_registry()
 
 # ### Nil
 #
 # Nil is a type with a single value, usually taken to denote no value.
 
-nil = None
+nil = bind('nil', None)
 
+@fn
 def nil_p(value):
     return value is None
 
+@fn
 def read_nil(value):
     return nil
 
+@fn
 def display_nil(value):
     return '()'
 
@@ -29,12 +35,14 @@ def display_nil(value):
 #
 # The true and false values.
 
-true = True
-false = False
+true = bind('#t', True)
+false = bind('#f', False)
 
+@fn
 def boolean_p(value):
-    return value in (true, false)
+    return value is true or value is false
 
+@fn
 def read_boolean(value):
     if value == '#t':
         return true
@@ -42,6 +50,7 @@ def read_boolean(value):
         return false
     return None
 
+@fn
 def display_boolean(value):
     return '#t' if value else '#f'
 
@@ -51,17 +60,20 @@ def display_boolean(value):
 # These are fixed-precision numbers with no decimal part, obeying common notions
 # of machine integer arithmetic. They support large values.
 
-integer = int
+integer = bind('integer', int)
 
+@fn
 def integer_p(value):
     return isinstance(value, integer)
 
+@fn
 def read_integer(value):
     try:
         return integer(value)
     except ValueError:
         return nil
 
+@fn
 def display_integer(value):
     return str(value)
 
@@ -69,17 +81,20 @@ def display_integer(value):
 #
 # These are variable-precision numbers, which may have a decimal part.
 
-decimal = Decimal
+decimal = bind('decimal', Decimal)
 
+@fn
 def decimal_p(value):
     return isinstance(value, decimal)
 
+@fn
 def read_decimal(value):
     try:
         return decimal(value)
     except InvalidOperation:
         return nil
 
+@fn
 def display_decimal(value):
     return str(value)
 
@@ -87,17 +102,20 @@ def display_decimal(value):
 #
 # Sequences of characters.
 
-string = str
+string = bind('string', str)
 
+@fn
 def string_p(value):
     return not symbol_p(value) and isinstance(value, string)
 
+@fn
 def read_string(value):
     value = value[1:-1]
     value = value.replace('\\"', '"')
     value = value.replace('\\\\', '\\')
     return value
 
+@fn
 def display_string(value):
     value = value.replace('\\', '\\\\')
     value = value.replace('"', '\\"')
@@ -118,15 +136,19 @@ class Symbol(object):
     def __repr__(self):
         return f'Symbol({repr(self.value)})'
 
+# bind manually, fix the symbol table
 def symbol(string, symbol_table):
     return symbol_table[string]
 
+@fn
 def symbol_p(value):
     return isinstance(value, Symbol)
 
+@fn
 def read_symbol(value, symbol_table):
     return symbol(value, symbol_table)
 
+@fn
 def display_symbol(value):
     return str(value)
 
@@ -136,18 +158,23 @@ def display_symbol(value):
 
 Cons = namedtuple('Cons', 'head tail')
 
+@fn
 def cons(head, tail):
     return Cons(head, tail)
 
+@fn
 def cons_p(value):
     return isinstance(value, Cons)
 
+@fn
 def head(cons):
     return cons.head
 
+@fn
 def tail(cons):
     return cons.tail
 
+@fn
 def display_cons(value):
     parts = []
     while cons_p(value):
@@ -160,6 +187,7 @@ def display_cons(value):
 
 # ### Lists
 
+@fn
 def list(*elems):
     if elems:
         head, *tail = elems
@@ -167,6 +195,7 @@ def list(*elems):
     else:
         return nil
 
+@fn
 def list_p(value):
     return nil_p(value) or cons_p(value) and list_p(tail(value))
 
@@ -197,10 +226,20 @@ class Procedure(object):
     def continuation(self, environment, continuation):
         return e.eval(self.body, environment, self.symbols, continuation)
 
+@fn
 def procedure_p(value):
     return callable(value)
 
+@fn
+def display_procedure(proc):
+    if isinstance(proc, Procedure):
+        formals = ' '.join(display(formal) for formal in proc.formals)
+        body = display(proc.body)
+        return f'<procedure: (lambda ({formals}) {body})>'
+    return f'<builtin: {proc.__name__}>'
+
 # ### General-purpose functions
+@fn
 def display(value):
     if cons_p(value):
         return display_cons(value)
@@ -216,3 +255,5 @@ def display(value):
         return display_integer(value)
     if decimal_p(value):
         return display_decimal(value)
+    if procedure_p(value):
+        return display_procedure(value)
