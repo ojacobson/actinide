@@ -1,6 +1,4 @@
-from hypothesis import given, settings, HealthCheck, event
-from hypothesis.strategies import just, text, characters, from_regex, one_of, tuples, sampled_from
-import io
+from hypothesis import given
 
 from actinide.tokenizer import *
 from actinide.ports import *

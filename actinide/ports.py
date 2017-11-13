@@ -36,17 +36,17 @@ class Port(object):
 # Read at least 1 and up to ``n`` characters from a port. This consumes them
 # from the port: they are no longer available to future peeks or reads. ``n``
 # must be strictly positive.
-def read(port, n):
+def read_port(port, n):
     return port.read(n)
 
 # Read all remaining input from a port, consuming it.
-def read_fully(port):
+def read_port_fully(port):
     return port.read_fully()
 
 # Read at least 1 and up to ``n`` characters from a port, without consuming
 # them. They will be available on future peeks and reads. ``n`` must be strictly
 # positive.
-def peek(port, n):
+def peek_port(port, n):
     return port.peek(n)
 
 # Create an input port from a string.

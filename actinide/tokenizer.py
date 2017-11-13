@@ -1,4 +1,4 @@
-from .ports import read, peek
+from .ports import *
 
 # ## TOKENIZATION
 #
@@ -204,7 +204,6 @@ def tokenize_string_character(state):
 def tokenize_escaped_string_character(state):
     def tokenize_escaped_string_character_next(port):
         next = read_next(port)
-        print(f'Esc: state={repr(state)} next={repr(next)} peek={repr(peek_next(port))}')
         if next == '':
             raise TokenError('Unclosed string literal')
         if next in '\\"':
@@ -221,7 +220,7 @@ def tokenize_string_end(state):
     return tokenize_string_end_next
 
 def read_next(port):
-    return read(port, 1)
+    return read_port(port, 1)
 
 def peek_next(port):
-    return peek(port, 1)
+    return peek_port(port, 1)
