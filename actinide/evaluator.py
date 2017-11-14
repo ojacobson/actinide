@@ -47,7 +47,7 @@ from . import types as t
 def run(continuation, environment, args=()):
     while continuation is not None:
         continuation, environment, *args = continuation(environment, *args)
-    return args
+    return tuple(args)
 
 # ## FLAT CONTINUATIONS
 #
