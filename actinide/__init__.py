@@ -15,8 +15,8 @@ class BaseSession(object):
 
     def eval(self, form):
         form = expander.expand(form, self.symbols)
-        cps = evaluator.eval(form, self.environment, self.symbols, None)
-        return evaluator.run(cps)
+        cps = evaluator.eval(form, self.symbols, None)
+        return evaluator.run(cps, self.environment)
 
     def run(self, port):
         form = self.read(port)

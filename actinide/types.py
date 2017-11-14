@@ -211,20 +211,16 @@ def flatten(list):
 class Procedure(object):
     def __init__(self, body, formals, environment, symbols):
         self.body = body
+        self.continuation = e.eval(body, symbols, None)
         self.formals = formals
         self.environment = environment
-        self.symbols = symbols
 
     def __call__(self, *args):
         call_env = self.invocation_environment(*args)
-        call_cont = self.continuation(call_env, None)
-        return e.run(call_cont, ())
+        return e.run(self.continuation, call_env, ())
 
     def invocation_environment(self, *args):
         return Environment(zip(self.formals, args), self.environment)
-
-    def continuation(self, environment, continuation):
-        return e.eval(self.body, environment, self.symbols, continuation)
 
 @fn
 def procedure_p(value):

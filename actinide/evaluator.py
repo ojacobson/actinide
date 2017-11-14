@@ -44,9 +44,9 @@ from . import types as t
 # The result of evaluating a continuation is always a Python tuple. For
 # expressions, this tuple contains the value(s) produced by the expression. For
 # forms which do not produce a value, this returns the empty tuple.
-def run(continuation, args=()):
+def run(continuation, environment, args=()):
     while continuation is not None:
-        continuation, args = continuation(*args)
+        continuation, environment, args = continuation(environment, *args)
     return args
 
 # ## FLAT CONTINUATIONS
@@ -57,31 +57,33 @@ def run(continuation, args=()):
 # Returns a continuation which yields a single value, verbatim, and chains to a
 # known target continuation. This implements evaluation for literals.
 def literal(value, continuation):
-    return lambda: (continuation, (value,))
+    return lambda environment: (continuation, environment, (value,))
 
 # Returns a continuation which looks up a symbol in an environment, yields the
 # result, and chains to a known target continuation. This implements evaluation
 # for variable lookups.
-def symbol(symb, environment, continuation):
-    return lambda: (continuation, (environment.find(symb),))
+def symbol(symb, continuation):
+    return lambda environment: (continuation, environment, (environment.find(symb),))
 
 # Returns a continuation which yields a newly-created procedure, and chains to a
 # known target continuation. This implements evaluation for the tail of a lambda
 # form. (The head of the lambda form must be discarded before calling this
 # factory.)
-def lambda_(defn, environment, symbols, continuation):
+def lambda_(defn, symbols, continuation):
     formals = t.flatten(t.head(defn))
     body = t.head(t.tail(defn))
-    proc = t.Procedure(body, formals, environment, symbols)
-    return lambda: (continuation, (proc,))
+    def lambda__(environment):
+        proc = t.Procedure(body, formals, environment, symbols)
+        return continuation, environment, (proc,)
+    return lambda__
 
 # Returns a continuation which takes a value and binds that value to a symbol in
 # a specific environment, then chains to a known target continuation. This
 # implements evaluation of the `define` special form, once the value is known.
-def bind(symbol, environment, continuation):
-    def bind_(value):
+def bind(symbol, continuation):
+    def bind_(environment, value):
         environment.define(symbol, value)
-        return (continuation, ())
+        return (continuation, environment, ())
     return bind_
 
 # Returns a continuation which takes a value and returns one of two known target
@@ -90,14 +92,14 @@ def bind(symbol, environment, continuation):
 # this chains to the `on_false` continuation. In either case, the continuation
 # not chained to is discarded.
 def branch(on_true, on_false):
-    return lambda val: (on_true if val else on_false, ())
+    return lambda environment, val: (on_true if val else on_false, environment, ())
 
 # Returns a continuation which receives values, and appends them to the values
 # passed to this factory, before chaining to a known target continuation. This
 # implements intermediate evaluation of list forms, where part of the list is
 # already known, as well as splicing for forms that yield multiple values.
 def append(args, continuation):
-    return lambda *tail: (continuation, (*args, *tail))
+    return lambda environment, *tail: (continuation, environment, (*args, *tail))
 
 # Transforms a continuation which should receive function results into a
 # function call continuation. A function call continuation receives a function
@@ -106,20 +108,44 @@ def append(args, continuation):
 # If the function is a procedure, this instead returns a continuation which will
 # invoke the procedure, then chain to the wrapped continuation.
 def invoke(continuation):
-    def invoke_(fn, *args):
+    def invoke_(environment, fn, *args):
         if isinstance(fn, t.Procedure):
-            return procedure_call(fn, *args)
-        return builtin(fn, *args)
+            return procedure_call(environment, fn, *args)
+        return builtin(environment, fn, *args)
 
-    def procedure_call(fn, *args):
+    def procedure_call(environment, fn, *args):
         call_env = fn.invocation_environment(*args)
-        call_cont = fn.continuation(call_env, continuation)
-        return (call_cont, ())
+        call_cont = fn.continuation
+        return_cont = tail_graft(continuation, environment, call_cont)
+        return return_cont, call_env, ()
 
-    def builtin(fn, *args):
+    def builtin(environment, fn, *args):
         result = fn(*args)
-        return (continuation, result)
+        return (continuation, environment, result)
     return invoke_
+
+# Continuation transformer. Given a guarded continuation, and a graft
+# continuation and environment, if the graft continuation is None then this
+# returns the guarded continuation unchanged. Otherwise, this replaces the
+# guarded continuation with a guard.
+#
+# The guard calls guarded continuation when applied, but if the guarded
+# continuation chains to None, the guard replaces the returned continuation and
+# environment with the graft continuation and environment. This handles
+# environment restoration after a function call.
+def tail_graft(continuation, environment, guarded):
+    # Tail call magic: if we're not going to transition to another continuation,
+    # don't bother grafting environment recovery on.
+    if continuation is None:
+        return guarded
+
+    def guard(env, *args):
+        next, env, args = guarded(env, *args)
+        if next is None:
+            return continuation, environment, args
+        return tail_graft(continuation, environment, next), env, args
+
+    return guard
 
 # ## RECURSIVE CONTINUATIONS
 #
@@ -133,20 +159,20 @@ def invoke(continuation):
 # This is the heart of the continuation-passing transformation. Every valid form
 # can be translated into continuation-passing form throught this factory. This
 # handles literals, symbols, special forms, and function application.
-def eval(value, environment, symbols, continuation):
+def eval(value, symbols, continuation):
     if t.symbol_p(value):
-        return symbol(value, environment, continuation)
+        return symbol(value, continuation)
     if t.nil_p(value) or not t.list_p(value):
         return literal(value, continuation)
     # Special forms (all of which begin with a special symbol, discarded here)
     if t.head(value) == symbols['if']:
-        return if_(t.tail(value), environment, symbols, continuation)
+        return if_(t.tail(value), symbols, continuation)
     if t.head(value) == symbols['define']:
-        return define(t.tail(value), environment, symbols, continuation)
+        return define(t.tail(value), symbols, continuation)
     if t.head(value) == symbols['lambda']:
-        return lambda_(t.tail(value), environment, symbols, continuation)
+        return lambda_(t.tail(value), symbols, continuation)
     # Ran out of alternatives, must be a function application
-    return apply(value, environment, symbols, invoke(continuation))
+    return apply(value, symbols, invoke(continuation))
 
 # Returns a continuation which fully evaluates a `(define symbol expr)` form,
 # before chaining to a known target continuation. First, the returned
@@ -154,15 +180,15 @@ def eval(value, environment, symbols, continuation):
 # continuation`. The result of this evaluation is chained to a `bind`
 # continuation, to store the result of evaluation in the target environment.
 # Finally, the `bind` continuation chains to the target continuation.
-def define(value, environment, symbols, continuation):
+def define(value, symbols, continuation):
     symb, expr = t.flatten(value)
 
     if not t.symbol_p(symb):
         raise RuntimeError("Argument to define not a symbol: {t.display(symb)}")
 
-    bind_cont = bind(symb, environment, continuation)
-    eval_cont = eval(expr, environment, symbols, bind_cont)
-    return lambda: (eval_cont, ())
+    bind_cont = bind(symb, continuation)
+    eval_cont = eval(expr, symbols, bind_cont)
+    return lambda environment: (eval_cont, environment, ())
 
 # Returns a continuation which fully evaluates an `(if cond if-true if-false)`
 # form, before chaining to a known target continuation. First, the returned
@@ -170,14 +196,14 @@ def define(value, environment, symbols, continuation):
 # construct the continuation), which chains to a `branch` continuation
 # containing continuations for the `if-true` and `if-false` epxressions. The
 # `if-true` and `if-false` continuations each chain to the target continuation.
-def if_(value, environment, symbols, continuation):
+def if_(value, symbols, continuation):
     cond, if_true, if_false = t.flatten(value)
 
-    if_true_cont = eval(if_true, environment, symbols, continuation)
-    if_false_cont = eval(if_false, environment, symbols, continuation)
+    if_true_cont = eval(if_true, symbols, continuation)
+    if_false_cont = eval(if_false, symbols, continuation)
     branch_cont = branch(if_true_cont, if_false_cont)
 
-    return eval(cond, environment, symbols, branch_cont)
+    return eval(cond, symbols, branch_cont)
 
 # Returns a continuation which fully evaluates the elements of a list, before
 # chaining to a target continuation. If this is applied to an empty list, the
@@ -186,8 +212,8 @@ def if_(value, environment, symbols, continuation):
 # list (recursively, using `eval` to prepare the continuation), then chains to
 # an `append` continuation to glue the result onto the result of recursively
 # calling `apply` on the tail of the list.
-def apply(list, environment, symbols, continuation):
+def apply(list, symbols, continuation):
     if t.nil_p(list):
-        return lambda *args: (continuation, args)
-    tail_cont = apply(t.tail(list), environment, symbols, continuation)
-    return lambda *args: (eval(t.head(list), environment, symbols, append(args, tail_cont)), ())
+        return lambda environment, *args: (continuation, environment, args)
+    tail_cont = apply(t.tail(list), symbols, continuation)
+    return lambda environment, *args: (eval(t.head(list), symbols, append(args, tail_cont)), environment, ())
