@@ -13,6 +13,7 @@ from .programs import *
 def test_evaluator(program_result):
     program, result, bindings = program_result
     environment = Environment()
-    assert run(eval(program, symbol_table, None), environment) == result
+    macros = Environment()
+    assert run(eval(program, symbol_table, None), environment, macros) == result
     for symbol, value in bindings:
         assert environment[symbol] == value

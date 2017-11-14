@@ -17,7 +17,7 @@ def repl(session, port):
                 print()
                 return 0
             results = session.eval(form)
-            print(*(at.display(result) for result in results))
+            print(*(session.display(result) for result in results))
         except Exception as e:
             print(e)
         except KeyboardInterrupt:

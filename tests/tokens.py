@@ -1,23 +1,29 @@
 from hypothesis.strategies import just, one_of, characters, text, lists, tuples
 from hypothesis.strategies import composite, recursive
 
+from actinide import tokenizer as t
+
 # Generators for token families
 
-# Generates the `(` token.
-def open_parens():
-    return just('(')
+# Generates the `(` and ')' tokens.
+def parens():
+    return one_of(just(p) for p in t.parens)
 
-# Generates the ')' token.
-def close_parens():
-    return just(')')
+def quotes():
+    return one_of(
+        just("'"),
+        just('`'),
+        just(','),
+        just(',@'),
+    )
 
 # Generates characters that are legal, unescaped, inside of a string.
 def string_bare_characters():
-    return characters(blacklist_characters='\\"')
+    return characters(blacklist_characters=t.string_escaped)
 
 # Generates legal string escape sequences.
 def string_escaped_characters():
-    return one_of(just('"'), just('\\')).map(lambda c: '\\' + c)
+    return one_of(just(c) for c in t.string_escaped).map(lambda c: '\\' + c)
 
 # Generates single-character string representations, including escapes.
 def string_characters():
@@ -34,7 +40,7 @@ def strings():
 
 # Generates characters which are legal within a symbol.
 def symbol_characters():
-    return characters(blacklist_characters=' \t\n();"')
+    return characters(blacklist_characters=t.whitespace + t.parens + t.quotes + t.string_delim + t.comment_delim)
 
 # Generates legal symbols.
 def symbols():
@@ -42,11 +48,11 @@ def symbols():
 
 # Generates single whitespace characters.
 def whitespace_characters():
-    return one_of(just('\n'), just(' '), just('\t'))
+    return one_of(just(c) for c in t.whitespace)
 
 # Generates a single token.
 def tokens():
-    return one_of(symbols(), strings(), open_parens(), close_parens())
+    return one_of(symbols(), strings(), parens(), quotes())
 
 # Generates a string which may not be empty, but which does not contain a token.
 def nontokens():
@@ -78,16 +84,16 @@ def spaced_tokens():
         return tuples(intertokens(), strategy)
     def unspaced(strategy):
         return tuples(one_of(just(''), intertokens()), strategy)
+    def spaced_quotes():
+        return spaced(quotes())
     def spaced_symbols():
         return spaced(symbols())
     def spaced_strings():
         return unspaced(strings())
-    def spaced_open_parens():
-        return unspaced(open_parens())
-    def spaced_close_parens():
-        return unspaced(close_parens())
+    def spaced_parens():
+        return unspaced(parens())
 
-    return one_of(spaced_symbols(), spaced_strings(), spaced_open_parens(), spaced_close_parens())
+    return one_of(spaced_symbols(), spaced_quotes(), spaced_strings(), spaced_parens())
 
 # Generats a list of pairs as per spaced_token().
 def spaced_token_sequences():

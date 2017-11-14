@@ -1,6 +1,7 @@
 from hypothesis.strategies import integers, decimals as hypo_decimals, booleans, characters, text, tuples, lists as hypo_lists, just, one_of
 from hypothesis.strategies import deferred, recursive
 
+from actinide import tokenizer as t
 from actinide.symbol_table import *
 from actinide.types import *
 
@@ -37,13 +38,22 @@ def strings():
 # Generates any character legal in a symbol, which cannot be part of some other
 # kind of atom.
 def symbol_characters():
-    return characters(blacklist_characters='01234567890#. \t\n();"')
+    return characters(blacklist_characters='01234567890#' + t.whitespace + t.parens + t.quotes + t.string_delim + t.comment_delim)
 
 # Generates symbols guaranteed not to conflict with other kinds of literal. This
 # is a subset of the legal symbols.
 def symbols():
     return text(symbol_characters(), min_size=1)\
         .map(lambda item: symbol_table[item])
+
+def quoted_forms():
+    return tuples(
+        one_of(
+            symbol_table[q]
+            for q in ['quote', 'quasiquote', 'unquote', 'unquote-splicing']
+        ),
+        deferred(lambda: forms),
+    ).map(lambda elems: list(*elems))
 
 # Generates atoms.
 def atoms():

@@ -12,7 +12,7 @@ from .forms import *
 # * Given a form, can the reader recover it from its display?
 @given(forms())
 def test_reader(form):
-    input = display(form)
+    input = display(form, symbol_table)
     port = string_to_input_port(input)
 
     assert read(port, symbol_table) == form
@@ -21,7 +21,7 @@ def test_reader(form):
 #   without touching the garbage? This is only reliable with lists and conses.
 @given(lists() | conses(), text())
 def test_reader_with_trailing(form, text):
-    input = display(form) + text
+    input = display(form, symbol_table) + text
     port = string_to_input_port(input)
 
     assert read(port, symbol_table) == form

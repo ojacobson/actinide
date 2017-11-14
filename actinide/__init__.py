@@ -5,6 +5,7 @@ class BaseSession(object):
     def __init__(self):
         self.symbols = symbol_table.SymbolTable()
         self.environment = evaluator.Environment()
+        self.macros = evaluator.Environment()
         self.core_builtins()
         self.standard_library()
 
@@ -14,9 +15,9 @@ class BaseSession(object):
         return reader.read(port, self.symbols)
 
     def eval(self, form):
-        form = expander.expand(form, self.symbols)
+        form = expander.expand(form, self.symbols, self.macros)
         cps = evaluator.eval(form, self.symbols, None)
-        return evaluator.run(cps, self.environment)
+        return evaluator.run(cps, self.environment, self.macros)
 
     def run(self, port):
         form = self.read(port)
@@ -56,17 +57,10 @@ class BaseSession(object):
             symb = types.symbol(symb, self.symbols)
         return symb
 
+    def display(self, form):
+        return types.display(form, self.symbols)
+
     def core_builtins(self):
-        self.bind_module(core)
-
-    def standard_library(self):
-        pass
-
-class Session(BaseSession):
-    def standard_library(self):
-        @self.bind_fn
-        def symbol(val):
-            return types.symbol(val, self.symbols)
         @self.bind_fn
         def read(port):
             return reader.read(port, self.symbols)
@@ -76,6 +70,17 @@ class Session(BaseSession):
         @self.bind_fn
         def expand(form):
             return expander.expand(form, self.symbols)
+        @self.bind_fn
+        def symbol(val):
+            return types.symbol(val, self.symbols)
         self.bind_module(types)
+        self.bind_module(core)
+        self.bind_fn(self.display)
+
+    def standard_library(self):
+        pass
+
+class Session(BaseSession):
+    def standard_library(self):
         self.bind_module(stdlib)
         self.bind_module(ports)

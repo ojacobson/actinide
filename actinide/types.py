@@ -27,7 +27,6 @@ def nil_p(value):
 def read_nil(value):
     return nil
 
-@fn
 def display_nil(value):
     return '()'
 
@@ -50,7 +49,6 @@ def read_boolean(value):
         return false
     return None
 
-@fn
 def display_boolean(value):
     return '#t' if value else '#f'
 
@@ -73,7 +71,6 @@ def read_integer(value):
     except ValueError:
         return nil
 
-@fn
 def display_integer(value):
     return str(value)
 
@@ -94,7 +91,6 @@ def read_decimal(value):
     except InvalidOperation:
         return nil
 
-@fn
 def display_decimal(value):
     return str(value)
 
@@ -115,7 +111,6 @@ def read_string(value):
     value = value.replace('\\\\', '\\')
     return value
 
-@fn
 def display_string(value):
     value = value.replace('\\', '\\\\')
     value = value.replace('"', '\\"')
@@ -148,7 +143,6 @@ def symbol_p(value):
 def read_symbol(value, symbol_table):
     return symbol(value, symbol_table)
 
-@fn
 def display_symbol(value):
     return str(value)
 
@@ -174,15 +168,14 @@ def head(cons):
 def tail(cons):
     return cons.tail
 
-@fn
-def display_cons(value):
+def display_cons(value, symbols):
     parts = []
     while cons_p(value):
-        parts.append(display(head(value)))
+        parts.append(display(head(value), symbols))
         value = tail(value)
     if not nil_p(value):
         parts.append('.')
-        parts.append(display(value))
+        parts.append(display(value, symbols))
     return '(' + ' '.join(parts) + ')'
 
 # ### Lists
@@ -199,6 +192,23 @@ def list(*elems):
 def list_p(value):
     return nil_p(value) or cons_p(value) and list_p(tail(value))
 
+@fn
+def append(list, *lists):
+    if not lists:
+        return list
+    if nil_p(list):
+        return append(*lists)
+    value, next = head(list), tail(list)
+    return cons(value, append(next, *lists))
+
+@fn
+def len(list):
+    l = 0
+    while not nil_p(list):
+        l += 1
+        list = tail(list)
+    return l
+
 def flatten(list):
     r = []
     while not nil_p(list):
@@ -209,15 +219,17 @@ def flatten(list):
 # ### Procedures
 
 class Procedure(object):
-    def __init__(self, body, formals, environment, symbols):
+    def __init__(self, body, formals, environment, macros, symbols):
         self.body = body
         self.continuation = e.eval(body, symbols, None)
         self.formals = formals
         self.environment = environment
+        self.macros = macros
 
     def __call__(self, *args):
         call_env = self.invocation_environment(*args)
-        return e.run(self.continuation, call_env, ())
+        call_macros = Environment(parent=self.macros)
+        return e.run(self.continuation, call_env, call_macros, ())
 
     def invocation_environment(self, *args):
         return Environment(zip(self.formals, args), self.environment)
@@ -226,19 +238,21 @@ class Procedure(object):
 def procedure_p(value):
     return callable(value)
 
-@fn
-def display_procedure(proc):
+def display_procedure(proc, symbols):
     if isinstance(proc, Procedure):
-        formals = ' '.join(display(formal) for formal in proc.formals)
-        body = display(proc.body)
+        formals = ' '.join(display(formal, symbols) for formal in proc.formals)
+        body = display(proc.body, symbols)
         return f'<procedure: (lambda ({formals}) {body})>'
     return f'<builtin: {proc.__name__}>'
 
 # ### General-purpose functions
-@fn
-def display(value):
+
+# Bind manually, fixing the symbol table at the bind site
+def display(value, symbols):
+    if quote_p(value, symbols):
+        return display_quote(value, symbols)
     if cons_p(value):
-        return display_cons(value)
+        return display_cons(value, symbols)
     if symbol_p(value):
         return display_symbol(value)
     if string_p(value):
@@ -252,6 +266,25 @@ def display(value):
     if decimal_p(value):
         return display_decimal(value)
     if procedure_p(value):
-        return display_procedure(value)
+        return display_procedure(value, symbols)
     # Give up and use repr to avoid printing `None`.
     return repr(value)
+
+def quote_p(value, symbols):
+    return cons_p(value) and head(value) in [
+        symbols[q]
+        for q in ['quote', 'quasiquote', 'unquote', 'unquote-splicing']
+    ]
+
+def display_quote(value, symbols):
+    quote, form = flatten(value)
+    if quote == symbols['quote']:
+        return "'" + display(form, symbols)
+    if quote == symbols['quasiquote']:
+        return "`" + display(form, symbols)
+    if quote == symbols['unquote']:
+        return "," + display(form, symbols)
+    if quote == symbols['unquote-splicing']:
+        return ",@" + display(form, symbols)
+    # emergency fallback
+    return display_cons(value, symbols)

@@ -32,7 +32,7 @@ def read(port, symbols):
         raise SyntaxError("Unexpected ')'")
     if head == '(':
         return read_list(port, symbols)
-    return read_atom(head, symbols)
+    return read_atom(head, port, symbols)
 
 # Reads the body of a list from a port. This will read forms, recursively, until
 # it encounters the terminating ``)`` that closes the current list, or until it
@@ -53,7 +53,7 @@ def read_list(port, symbols):
             read_list_tail(port, symbols),
         )
     return cons(
-        read_atom(head, symbols),
+        read_atom(head, port, symbols),
         read_list_tail(port, symbols),
     )
 
@@ -74,7 +74,7 @@ def read_list_tail(port, symbols):
     if head == '.':
         return read_cons_head(port, symbols)
     return cons(
-        read_atom(head, symbols),
+        read_atom(head, port, symbols),
         read_list_tail(port, symbols),
     )
 
@@ -92,7 +92,7 @@ def read_cons_head(port, symbols):
             port,
             symbols,
         )
-    return read_cons_tail(read_atom(head, symbols), port, symbols)
+    return read_cons_tail(read_atom(head, port, symbols), port, symbols)
 
 # Reads the second form of a dotted pair from the input. This must either be a
 # terminating ``)``, or another dotted pair.
@@ -116,13 +116,27 @@ def read_cons_tail(head, port, symbols):
 # * ``read_decimal``
 # * ``read_symbol`` in the current symbol table (which always succeeds)
 #
+# This also reconstructs quoted forms.
+#
 # The first reader to accept the string determines the type of the result.
-def read_atom(atom, symbols):
+quotes = {
+    "'": 'quote',
+    "`": 'quasiquote',
+    ",": 'unquote',
+    ",@": 'unquote-splicing',
+}
+def read_atom(atom, port, symbols):
     def read_as_first(val, *funcs):
         for func in funcs:
             result = func(val)
             if result is not None:
                 return result
+
+    if atom in quotes:
+        quoted = read(port, symbols)
+        if quoted == EOF:
+            raise SyntaxError("Unexpected end of input")
+        return list(symbols[quotes[atom]], quoted)
 
     if atom[0] == '"':
         return read_string(atom)

@@ -44,6 +44,13 @@ class TokenError(Exception):
     '''
     pass
 
+whitespace = " \n\t"
+parens = "()"
+quotes = "'`," # ,@ is also a quote, but not a single-character quote
+comment_delim = ';'
+string_delim = '"'
+string_escaped = '"\\'
+
 # Read one token from a port.
 #
 # This is the top-level driver for the state machine that divides the underlying
@@ -73,11 +80,13 @@ def tokenize_any(port):
     lookahead = peek_next(port)
     if lookahead == '':
         return None, tokenize_eof
-    if lookahead == ';':
+    if lookahead in comment_delim:
         return None, tokenize_comment
-    if lookahead in '()':
+    if lookahead in parens:
         return None, tokenize_syntax
-    if lookahead in ' \t\n':
+    if lookahead in quotes:
+        return None, tokenize_quote
+    if lookahead in whitespace:
         return None, tokenize_whitespace
     return None, tokenize_atom
 
@@ -104,6 +113,20 @@ def tokenize_comment(port):
     if next == '\n':
         return None, tokenize_any
     return None, tokenize_comment
+
+def tokenize_quote(port):
+    next = read_next(port)
+    if next == ',':
+        return None, tokenize_unquote(next)
+    return next, tokenize_any
+
+def tokenize_unquote(state):
+    def tokenize_unquote_next(port):
+        next = peek_next(port)
+        if next == '@':
+            return state + read_next(port), tokenize_any
+        return state, tokenize_any
+    return tokenize_unquote_next
 
 # Consumes one character, returning it as a token, before transitioning back to
 # the ``tokenize_any`` state. This correctly tokenizes the ``(`` and ``)``
@@ -206,9 +229,7 @@ def tokenize_escaped_string_character(state):
         next = read_next(port)
         if next == '':
             raise TokenError('Unclosed string literal')
-        if next in '\\"':
-            return None, tokenize_string_character(state + next)
-        raise TokenError(f"Invalid string escape '\\{next}'")
+        return None, tokenize_string_character(state + next)
     return tokenize_escaped_string_character_next
 
 # A state factory which terminates a string literal. These states read off the
