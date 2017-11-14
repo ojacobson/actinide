@@ -101,6 +101,9 @@ def branch(on_true, on_false):
 def append(args, continuation):
     return lambda environment, *tail: (continuation, environment, *args, *tail)
 
+def begin(continuation):
+    return lambda environment, *args: (continuation, environment, *(args[-1:] if args else ()))
+
 # Transforms a continuation which should receive function results into a
 # function call continuation. A function call continuation receives a function
 # and a sequence of arguments. If the function is a primitive function, the
@@ -171,6 +174,8 @@ def eval(value, symbols, continuation):
         return define(t.tail(value), symbols, continuation)
     if t.head(value) == symbols['lambda']:
         return lambda_(t.tail(value), symbols, continuation)
+    if t.head(value) == symbols['begin']:
+        return apply(t.tail(value), symbols, begin(continuation))
     # Ran out of alternatives, must be a function application
     return apply(value, symbols, invoke(continuation))
 
