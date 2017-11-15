@@ -14,8 +14,11 @@ class BaseSession(object):
             port = ports.string_to_input_port(port)
         return reader.read(port, self.symbols)
 
+    def expand(self, form):
+        return expander.expand(form, self.symbols, self.macros)
+
     def eval(self, form):
-        form = expander.expand(form, self.symbols, self.macros)
+        form = self.expand(form)
         cps = evaluator.eval(form, self.symbols, None)
         return evaluator.run(cps, self.environment, self.macros)
 
@@ -68,14 +71,12 @@ class BaseSession(object):
         def eval(form):
             return self.eval(form)
         @self.bind_fn
-        def expand(form):
-            return expander.expand(form, self.symbols)
-        @self.bind_fn
         def symbol(val):
             return types.symbol(val, self.symbols)
+        self.bind_fn(self.expand)
+        self.bind_fn(self.display)
         self.bind_module(types)
         self.bind_module(core)
-        self.bind_fn(self.display)
 
     def standard_library(self):
         pass

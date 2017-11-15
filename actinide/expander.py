@@ -20,7 +20,7 @@ def expand(form, symbols, macros):
         form = expand_if(form)
     elif head(form) == symbols['define']:
         form = expand_define(form, symbols)
-    elif head(form) == symbols['defmacro']:
+    elif head(form) == symbols['define-macro']:
         form = expand_define(form, symbols)
     elif head(form) == symbols['lambda']:
         form = expand_lambda(form, symbols)
@@ -56,7 +56,7 @@ def expand_if(form):
     false, form = uncons(form)
     return list(head, cond, true, false)
 
-# Expand a define or defmacro form.
+# Expand a define or define-macro form.
 #
 # (define (NAME FORMALS) BODY)
 #   => (define name (lambda FORMALS BODY))

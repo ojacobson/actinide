@@ -240,9 +240,3 @@ Actinide functions returne a tuple of results rather than a single value:
 
 This two-way binding mechanism makes it straightforward to define interfaces
 between Actinide and the target domain.
-
-*********************************
-The Actinide Programming Language
-*********************************
-
-WIP

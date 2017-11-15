@@ -189,7 +189,7 @@ def eval(value, symbols, continuation):
         return if_(t.tail(value), symbols, continuation)
     if t.head(value) == symbols['define']:
         return define(t.tail(value), symbols, continuation, bind)
-    if t.head(value) == symbols['defmacro']:
+    if t.head(value) == symbols['define-macro']:
         return define(t.tail(value), symbols, continuation, macro_bind)
     if t.head(value) == symbols['lambda']:
         return lambda_(t.tail(value), symbols, continuation)
