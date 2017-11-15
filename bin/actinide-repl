@@ -2,22 +2,69 @@
 
 import sys
 
+import readline
+
 import actinide as a
+import actinide.tokenizer as ak
 import actinide.reader as ar
 import actinide.ports as ap
 import actinide.types as at
 
+class ConsolePort(ap.Port):
+    def __init__(self):
+        self.line = None
+        self.prompt = ">>> "
+
+    def next_prompt(self):
+        prompt, self.prompt = self.prompt, "... "
+        return prompt
+
+    def reset_prompt(self):
+        self.prompt = ">>> "
+
+    def ensure_line(self):
+        if self.line == None:
+            try:
+                self.line = input(self.next_prompt()) + '\n'
+            except EOFError:
+                self.line = ''
+
+    def peek(self, n):
+        self.ensure_line()
+        return self.line[:n]
+
+    def read(self, n):
+        self.ensure_line()
+        result, self.line = self.line[:n], self.line[n:]
+        if self.line == '':
+            self.line = None
+        return result
+
+    def read_fully(self, n):
+        def read_fully_():
+            result = self.read(1024)
+            yield result
+            while result != '':
+                result = self.read(1024)
+                yield result
+        return ''.join(read_fully_())
+
+    def forget_input(self):
+        self.line = None
+
 def repl(session, port):
     while True:
         try:
-            sys.stdout.write("> ")
-            sys.stdout.flush()
+            port.reset_prompt()
             form = session.read(port)
             if form is ar.EOF:
                 print()
                 return 0
             results = session.eval(form)
             print(*(session.display(result) for result in results))
+        except (ak.TokenError, ar.SyntaxError) as e:
+            print(e)
+            port.forget_input()
         except Exception as e:
             print(e)
         except KeyboardInterrupt:
@@ -25,7 +72,7 @@ def repl(session, port):
             print("(Interrupted)")
 
 def main():
-    port = ap.Port(sys.stdin)
+    port = ConsolePort()
     session = a.Session()
 
     return repl(session, port)

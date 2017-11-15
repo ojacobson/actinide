@@ -229,7 +229,9 @@ def tokenize_escaped_string_character(state):
         next = read_next(port)
         if next == '':
             raise TokenError('Unclosed string literal')
-        return None, tokenize_string_character(state + next)
+        if next in string_escaped:
+            return None, tokenize_string_character(state + next)
+        raise TokenError(f"Invalid string escape '\\{next}'")
     return tokenize_escaped_string_character_next
 
 # A state factory which terminates a string literal. These states read off the
