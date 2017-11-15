@@ -58,11 +58,13 @@ def display_boolean(value):
 # These are fixed-precision numbers with no decimal part, obeying common notions
 # of machine integer arithmetic. They support large values.
 
-integer = bind('integer', int)
+@fn
+def integer(value):
+    return int(value)
 
 @fn
 def integer_p(value):
-    return isinstance(value, integer)
+    return isinstance(value, int)
 
 @fn
 def read_integer(value):
@@ -78,11 +80,13 @@ def display_integer(value):
 #
 # These are variable-precision numbers, which may have a decimal part.
 
-decimal = bind('decimal', Decimal)
+@fn
+def decimal(value):
+    return Decimal(value)
 
 @fn
 def decimal_p(value):
-    return isinstance(value, decimal)
+    return isinstance(value, Decimal)
 
 @fn
 def read_decimal(value):
@@ -98,11 +102,13 @@ def display_decimal(value):
 #
 # Sequences of characters.
 
-string = bind('string', str)
+@fn
+def string(value):
+    return string(Value)
 
 @fn
 def string_p(value):
-    return not symbol_p(value) and isinstance(value, string)
+    return not symbol_p(value) and isinstance(value, str)
 
 @fn
 def read_string(value):
@@ -127,7 +133,7 @@ class Symbol(object):
     def __hash__(self):
         return hash(self.value)
     def __str__(self):
-        return f"{self.value}"
+        return self.value
     def __repr__(self):
         return f'Symbol({repr(self.value)})'
 
