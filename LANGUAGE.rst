@@ -169,8 +169,8 @@ Lists that begin with one of the following symbols are evaluated specially.
         decimal, a non-empty string, or a non-nil ``cons``), then the ``if``
         form evaluates the ``true`` subform.
 
-      * If the ``cond`` subform produces a false value (any other value), then
-        the ``if`` form evaluates the ``false`` subform.
+      * If the ``cond`` subform evaluates to a false value (any other value),
+        then the ``if`` form evaluates the ``false`` subform.
 
       * If the ``if`` form does not have a ``false`` subform, the ``if`` form
         evaluates to ``nil`` when the ``cond`` subform evaluates to a false
@@ -185,8 +185,8 @@ Lists that begin with one of the following symbols are evaluated specially.
     * Must include a ``formals`` subform, which is generally a list of argument
       names (as symbols).
 
-    * May include a sequence of body subforms, which are evaluated in order
-      whenever the function is applied.
+    * May include a sequence of body subforms, which are evaluated in order (as
+      if by ``begin``) whenever the function is applied.
 
     * Functions capture the environment in effect when they are defined.
       Symbols within the function body can refer to names defined in the
@@ -223,7 +223,8 @@ Lists that begin with one of the following symbols are evaluated specially.
       for the ``+`` function itself, but it illustrates the idea that functions
       can include other functions.
 
-* ``define``: declares new bindings. This has two formats:
+* ``define``: A ``declare`` form sets the value of a new binding in the current
+  environment. This has two forms:
 
     * ``(define symbol value)``: evaluates the ``value`` subform, and binds the
       result to ``symbol`` in the current environment. Example:
@@ -365,11 +366,47 @@ Macros
 
     (let-one (x 1) x)
 
+  The macro procedure accepts the forms ``(x 1)`` and ``x``, unevaluated, as
+  arguments, and substitutes them into a *quasiquoted* form, which is used as a
+  template. The three *unquoted* parts (``,name``, ``,body``, and ``val``) are
+  replaced by evaluating the symbols in the context of the macro procedure, and
+  expand to the relevant parts of the input forms.
+
+  The returned form is approximately
+
+::
+
+  ((lambda (x) x) 1)
+
+  and evaluates as such.
+
   This program evaluates to 1, but *does not* bind ``x`` in the top-level
   environment.
 
-TO WRITE:
+* Actinide macros are *not hygienic*. A quoted symbol in the macro body will be
+  evaluated in the location where the macro is expanded, with full access to
+  the environment at that location. Similarly, symbols defined in the macro
+  will be fully visible to code running in the environment where the macro is
+  expanded.
 
-* Comprehensive intro to quote forms
-* Defining a simple macro
-* Applying a simple macro
+* Macros often use quote notation to build the returned form. Quote notation is
+  ultimately a sequence of ``quote`` forms. However, Actinide supports
+  *quasiquote* notation to simplify the creation of nested quoted forms
+  containing unquoted parts.
+
+    * A quasiquote form begins with ``\```. If the form contains no unquoted
+      parts, this will quasiquote each subform, terminating by quoting each
+      symbol or literal form and ``cons``ing them into a new list. ``\`(a b)``
+      expands to ``('a 'b)``.`
+
+    * Within a quasiquote form, an *unquote* form prevents the following form
+      from being quoted. An unquote form begins with ``,``, followed by a
+      single form (often, but not always, a single symbol). ``\`(a ,b c)``
+      expands to ``('a b 'c)``.
+
+    * Within a quasiquote form, an *unquote-splicing* form prevents the
+      following form from being quoted. An unquote-splicing form begins with
+      ``,@``, followed by a single form, which must evaluate to a list. The
+      elements of that list are grafted into the resulting form. Given
+      ``(define x (list 1 2))``, the form ``\`(a ,@x b)`` expands to ``('a 1 2
+      'b)``.
