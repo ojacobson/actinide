@@ -17,14 +17,14 @@ Forms
 
     * Simple forms: literals (and intro to types)
 
-        * Integers: a leading - sign for negative numbers, followed by a
+        * Integers: an optional leading - sign for negative numbers, followed by a
           sequence of digits and underscores. Represent base-ten values with no
           fractional part. Examples: ``10``, ``-2_049``.
 
-        * Decimals: a leading - sign for negative numbers, followed by a
-          sequence of digits and underscores, followed by a dot, followed by a
-          sequence of digits and underscores. Represent base-ten values which
-          may have a factional part. Examples: ``10.0``, ``-2_049.501_2``.
+        * Decimals: an optional leading - sign for negative numbers, followed
+          by a sequence of digits and underscores, followed by a dot, followed
+          by a sequence of digits and underscores. Represent base-ten values
+          which may have a factional part. Examples: ``10.0``, ``-2_049.501_2``.
 
         * Strings: any sequence of characters other than ``"`` or ``\``,
           enclosed in matching ``"`` marks. The sequences ``\"`` and ``\\`` are
@@ -68,18 +68,25 @@ Forms
 
 * Compound forms: quotes, quasiquotes, and unqoute forms.
 
-    * The forms ``'``, ``\```, ``,``, and ``,@`` represent "quote" forms.
+    * The forms ``'``, `````, ``,``, and ``,@`` represent "quote" forms.
 
     * These are discussed in detail in the Macros section, later on.
 
-******************
-Simple Expressions
-******************
+**********
+Evaluation
+**********
+
+* When an Actinide program is run, its top-level form is evaluated.
 
 * Evaluation of a form *reduces* the form to a simpler form - ideally, into a
   list of atomic values.
 
 * Every kind of form can be evaluated.
+
+
+******************
+Simple Expressions
+******************
 
 * Evaluation of literals:
 
@@ -117,10 +124,14 @@ Function Application
 
 * During application:
 
-    * A new environment is created, with the names of the arguments bound to
-      the values from the function application expression.
+    * A new *child* environment is created, with the names of the arguments
+      bound to the values from the function application expression. The
+      environment captured by the procedure is the *parent* of this new
+      environment: any name not found in the *child* environment will be looked
+      up in the parent environment instead.
 
-    * The body of the function is run as a program, in this environment.
+    * The body of the function is run as a program, in the newly-created
+      environment.
 
     * The result of the last form in the function is the result of the function
       application.
@@ -198,44 +209,44 @@ Lists that begin with one of the following symbols are evaluated specially.
 
     * Examples:
 
-    ::
+        ::
 
-        (lambda () 1)
+            (lambda () 1)
 
       This defines a constant function (which takes no arguments) whose
       evaluation is always 1.
 
-    ::
+        ::
 
-        (begin
-            (define x 5)
-            (lambda () x))
+            (begin
+                (define x 5)
+                (lambda () x))
 
       This defines a constant function whose evaluation is always the value of
       ``x`` in the top-level environment (initially 5).
 
-    ::
+        ::
 
-        (lambda (a b) (+ a b))
+            (lambda (a b) (+ a b))
 
       This defines a binary function (which takes two arguments) whose
       evaluation is the sum of those arguments. This is a simple replacement
       for the ``+`` function itself, but it illustrates the idea that functions
       can include other functions.
 
-* ``define``: A ``declare`` form sets the value of a new binding in the current
+* ``define``: A ``define`` form sets the value of a new binding in the current
   environment. This has two forms:
 
     * ``(define symbol value)``: evaluates the ``value`` subform, and binds the
       result to ``symbol`` in the current environment. Example:
 
-    ::
+        ::
 
-        (begin
-            ; Bind x to a value
-            (define x 5)
-            ; Expands x in the same environment
-            x)
+            (begin
+                ; Bind x to a value
+                (define x 5)
+                ; Expands x in the same environment
+                x)
 
       This program evaluates to ``5``.
 
@@ -245,16 +256,16 @@ Lists that begin with one of the following symbols are evaluated specially.
       This is expanded to an equivalent ``lambda`` form, within a ``define``
       form binding the resulting procedure to ``name``. For example:
 
-    ::
+        ::
 
-        (define (f a b) (+ a b))
+            (define (f a b) (+ a b))
 
       is equivalent to
 
-    ::
+        ::
 
-        (define f
-                (lambda (a b) (+ a b)))
+            (define f
+                    (lambda (a b) (+ a b)))
 
 * ``define-macro``: This has the same syntaxes as the ``define`` form, but it
   binds values to a special "macro table" which is used to transform code prior
@@ -263,9 +274,9 @@ Lists that begin with one of the following symbols are evaluated specially.
 * ``quote``: A ``quote`` form must have exactly one form in argument position.
   It evaluates to exactly the argument form, without evaluating it. For example:
 
-::
+    ::
 
-    (quote (+ 1 2))
+        (quote (+ 1 2))
 
   evaluates to the list ``(+ 1 2)``. Quote forms are the easiest way to obtain
   unevaluated symbols as values, and are an integral part of the Actinide macro
@@ -300,14 +311,14 @@ Loops and Recursion
 
 * Example:
 
-    * Simple recursive factorial:
+    * A simple, non-tail recursive factorial:
 
-    ::
+        ::
 
-        (define (factorial n)
-                (if (= n 1)
-                    1
-                    (* n (factorial (- n 1)))))
+            (define (factorial n)
+                    (if (= n 1)
+                        1
+                        (* n (factorial (- n 1)))))
 
       The ``factorial`` function *is not* called in tail position with respect
       to the body of the ``factorial`` function: After reducing that function
@@ -317,12 +328,12 @@ Loops and Recursion
       Attempting to evaluate ``(factorial 1000)`` fails due to limits on call
       depth: ``maximum recursion depth exceeded while calling a Python object``
 
-    ::
+        ::
 
-        (define (fact n a)
-                (if (= n 1)
-                    a
-                    (fact (- n 1) (* n a))))
+            (define (fact n a)
+                    (if (= n 1)
+                        a
+                        (fact (- n 1) (* n a))))
 
       The ``fact`` function *is* called in tail position with respect to the
       body of ``fact``. Specifically, it is in tail position with respect to
@@ -352,19 +363,19 @@ Macros
   value, and evaluates a body form in a temporary environment with that
   variable bound.
 
-::
+    ::
 
-    (define-macro (let-one binding body)
-        (begin
-            (define name (head binding))
-            (define val (head (tail binding)))
-            `((lambda (,name) ,body) ,val))))
+        (define-macro (let-one binding body)
+            (begin
+                (define name (head binding))
+                (define val (head (tail binding)))
+                `((lambda (,name) ,body) ,val))))
 
   To use this macro, apply it as if it were a function:
 
-::
+    ::
 
-    (let-one (x 1) x)
+        (let-one (x 1) x)
 
   The macro procedure accepts the forms ``(x 1)`` and ``x``, unevaluated, as
   arguments, and substitutes them into a *quasiquoted* form, which is used as a
@@ -374,9 +385,9 @@ Macros
 
   The returned form is approximately
 
-::
+    ::
 
-  ((lambda (x) x) 1)
+      ((lambda (x) x) 1)
 
   and evaluates as such.
 
@@ -394,19 +405,22 @@ Macros
   *quasiquote* notation to simplify the creation of nested quoted forms
   containing unquoted parts.
 
-    * A quasiquote form begins with ``\```. If the form contains no unquoted
+    * A quasiquote form begins with `````. If the form contains no unquoted
       parts, this will quasiquote each subform, terminating by quoting each
-      symbol or literal form and ``cons``ing them into a new list. ``\`(a b)``
-      expands to ``('a 'b)``.`
+      symbol or literal form and constructing a new list with the resulting
+      quoted forms. ```(a b)`` expands to ``('a 'b)``.
 
     * Within a quasiquote form, an *unquote* form prevents the following form
       from being quoted. An unquote form begins with ``,``, followed by a
-      single form (often, but not always, a single symbol). ``\`(a ,b c)``
+      single form (often, but not always, a single symbol). ```(a ,b c)``
       expands to ``('a b 'c)``.
 
     * Within a quasiquote form, an *unquote-splicing* form prevents the
       following form from being quoted. An unquote-splicing form begins with
       ``,@``, followed by a single form, which must evaluate to a list. The
       elements of that list are grafted into the resulting form. Given
-      ``(define x (list 1 2))``, the form ``\`(a ,@x b)`` expands to ``('a 1 2
+      ``(define x (list 1 2))``, the form ```(a ,@x b)`` expands to ``('a 1 2
       'b)``.
+
+* Macros defined inside of a function body are not visible to the top-level
+  expander.
