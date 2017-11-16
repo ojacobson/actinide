@@ -5,7 +5,7 @@ Actinide
 .. image:: https://circleci.com/gh/ojacobson/actinide.svg?style=svg
     :target: https://circleci.com/gh/ojacobson/actinide
 
-An embeddable lisp for Python applications.
+**An embeddable lisp for Python applications.**
 
 I had `an application`_ in which the ability to extend the application from
 within, safely, was valuable. None of the languages I reviewed met my criteria:
@@ -56,8 +56,8 @@ Installation
 
 ::
 
-    pip install actinide
-    pip freeze > requirements.txt
+    $ pip install actinide
+    $ pip freeze > requirements.txt
 
 Or, if you prefer, add ``actinide`` to your application's ``Pipfile`` or
 ``setup.py``.
@@ -92,7 +92,7 @@ Executing Actinide programs in a session consists of two steps: reading the
 program in from a string or an input port, and evaluating the resulting forms.
 The following example illustrates a simple infinite loop:
 
-::
+.. code:: python
 
     import actinide
 
@@ -119,7 +119,7 @@ The following example illustrates a simple infinite loop:
 As a shorthand for this common sequence of operations, the Session exposes a
 ``run`` method:
 
-::
+.. code:: python
 
     print(*session.run('(factorial 5)')) # prints "120"
 
@@ -130,7 +130,7 @@ environment using the ``bind``, ``bind_void``, ``bind_fn``, and
 To bind a simple value, or to manually bind a wrapped builtin, call
 ``session.bind``:
 
-::
+.. code:: python
 
     session.bind('var', 5)
     print(*session.run('var')) # prints "5"
@@ -138,7 +138,7 @@ To bind a simple value, or to manually bind a wrapped builtin, call
 To bind a function whose return value should be ignored, call ``bind_void``.
 This will automatically determine the name to bind the function to:
 
-::
+.. code:: python
 
     session.bind_void(print)
     session.run('(print "Hello, world!")') # prints "Hello, world!" using Python's print fn
@@ -146,7 +146,7 @@ This will automatically determine the name to bind the function to:
 To bind a function returning one value (most functions), call ``bind_fn``. This
 will automatically determine the name to bind to:
 
-::
+.. code:: python
 
     def example():
         return 5
@@ -157,7 +157,7 @@ will automatically determine the name to bind to:
 Finally, to bind a function returning a tuple of results, call
 ``bind_builtin``. This will automatically determine the name to bind to:
 
-::
+.. code:: python
 
     def pair():
         return 1, 2
@@ -193,7 +193,7 @@ session's ``bind_module`` method. The semantics of each symbol are as follows:
 The ``actinide.builtin`` module contains a helper function, ``make_registry``,
 which can simplify construction of these fields:
 
-::
+.. code:: python
 
     from actinide.builtin import make_registry
     ACTINIDE_BINDINGS, ACTINIDE_VOIDS, ACTINIDE_FNS, ACTINIDE_BUILTINS, bind, void, fn, builtin = make_registry()
@@ -215,7 +215,7 @@ which can simplify construction of these fields:
 Going the other direction, values can be extracted from bindings in the session
 using the ``get`` method:
 
-::
+.. code:: python
 
     session.run('(define x 8)')
     print(session.get('x')) # prints "8"
@@ -224,7 +224,7 @@ If the extracted value is a built-in function or an Actinide procedure, it can
 be invoked like a Python function. However, much like ``eval`` and ``run``,
 Actinide functions returne a tuple of results rather than a single value:
 
-::
+.. code:: python
 
     session.run('''
         (begin
