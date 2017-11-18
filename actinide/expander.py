@@ -125,6 +125,3 @@ def expand_macro(form, symbols, macros):
     args = flatten(args)
     expansion, = macro_body(*args)
     return expand(expansion, symbols, macros)
-
-def uncons(value):
-    return head(value), tail(value)

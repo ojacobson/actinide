@@ -1,8 +1,7 @@
 # Core functions
-from .builtin import make_registry
+from .builtin import Registry
+An = Registry()
 
-ACTINIDE_BINDINGS, ACTINIDE_VOIDS, ACTINIDE_FNS, ACTINIDE_BUILTINS, bind, void, fn, builtin = make_registry()
-
-@builtin
+@An.builtin
 def values(*args):
     return args

@@ -176,39 +176,28 @@ helper ultimately calls that module's ``wrap_void`` to wrap the function, and
 wrapped.) If you prefer to manually bind functions using ``bind``, they must be
 wrapped appropriately.
 
-Finally Actinide can bind specially-crafted Python modules. If a module
-contains top-level symbols named ``ACTINIDE_BINDINGS``, ``ACTINIDE_VOIDS``,
-``ACTINIDE_FNS``, and/or ``ACTINIDE_BUILTINS``, it can be passed to the
-session's ``bind_module`` method. The semantics of each symbol are as follows:
-
-* ``ACTINIDE_BINDINGS`` is a list of name, value pairs. Each binding binding
-  will be installed verbatim, without any function mangling, as if by
-  ``session.bind``.
-
-* ``ACTINIDE_VOIDS``, ``ACTINIDE_FNS``, and ``ACTINIDE_BUILTINS`` are lists of
-  function objects. Each will be bound as if by the corresponding
-  ``session.bind_void``, ``session.bind_fn``, or ``session.bind_builtin``
-  method.
-
-The ``actinide.builtin`` module contains a helper function, ``make_registry``,
-which can simplify construction of these fields:
+Finally, Actinide can bind specially-crafted Python modules. If a module
+contains a top-level symbol named ``An`` (for the informal chemical symbol for
+the actinide series), it can be passed to the session's ``bind_module`` method.
+The symbol must be bound to an instance of the ``Registry`` class from the
+``actinide.builtin`` module:
 
 .. code:: python
 
-    from actinide.builtin import make_registry
-    ACTINIDE_BINDINGS, ACTINIDE_VOIDS, ACTINIDE_FNS, ACTINIDE_BUILTINS, bind, void, fn, builtin = make_registry()
+    from actinide.builtin import Registry
+    An = Registry()
 
-    five = bind('five', 5)
+    five = An.bind('five', 5)
 
-    @void
+    @An.void
     def python_print(*args):
         print(*args)
 
-    @fn
+    @An.fn
     def bitwise_and(a, b):
         return a & b
 
-    @builtin
+    @An.builtin
     def two_values():
         return 1, "Two"
 

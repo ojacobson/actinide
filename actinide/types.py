@@ -9,21 +9,21 @@ from decimal import Decimal, InvalidOperation
 from . import evaluator as e
 
 from .environment import *
-from .builtin import make_registry
+from .builtin import Registry
 
-ACTINIDE_BINDINGS, ACTINIDE_VOIDS, ACTINIDE_FNS, ACTINIDE_BUILTINS, bind, void, fn, builtin = make_registry()
+An = Registry()
 
 # ### Nil
 #
 # Nil is a type with a single value, usually taken to denote no value.
 
-nil = bind('nil', None)
+nil = An.bind('nil', None)
 
-@fn
+@An.fn
 def nil_p(value):
     return value is None
 
-@fn
+@An.fn
 def read_nil(value):
     return nil
 
@@ -34,14 +34,14 @@ def display_nil(value):
 #
 # The true and false values.
 
-true = bind('#t', True)
-false = bind('#f', False)
+true = An.bind('#t', True)
+false = An.bind('#f', False)
 
-@fn
+@An.fn
 def boolean_p(value):
     return value is true or value is false
 
-@fn
+@An.fn
 def read_boolean(value):
     if value == '#t':
         return true
@@ -58,15 +58,15 @@ def display_boolean(value):
 # These are fixed-precision numbers with no decimal part, obeying common notions
 # of machine integer arithmetic. They support large values.
 
-@fn
+@An.fn
 def integer(value):
     return int(value)
 
-@fn
+@An.fn
 def integer_p(value):
     return isinstance(value, int)
 
-@fn
+@An.fn
 def read_integer(value):
     try:
         return integer(value)
@@ -80,15 +80,15 @@ def display_integer(value):
 #
 # These are variable-precision numbers, which may have a decimal part.
 
-@fn
+@An.fn
 def decimal(value):
     return Decimal(value)
 
-@fn
+@An.fn
 def decimal_p(value):
     return isinstance(value, Decimal)
 
-@fn
+@An.fn
 def read_decimal(value):
     try:
         return decimal(value)
@@ -102,15 +102,15 @@ def display_decimal(value):
 #
 # Sequences of characters.
 
-@fn
+@An.fn
 def string(value):
     return string(Value)
 
-@fn
+@An.fn
 def string_p(value):
     return not symbol_p(value) and isinstance(value, str)
 
-@fn
+@An.fn
 def read_string(value):
     value = value[1:-1]
     value = value.replace('\\"', '"')
@@ -141,11 +141,11 @@ class Symbol(object):
 def symbol(string, symbol_table):
     return symbol_table[string]
 
-@fn
+@An.fn
 def symbol_p(value):
     return isinstance(value, Symbol)
 
-@fn
+@An.fn
 def read_symbol(value, symbol_table):
     return symbol(value, symbol_table)
 
@@ -158,21 +158,25 @@ def display_symbol(value):
 
 Cons = namedtuple('Cons', 'head tail')
 
-@fn
+@An.fn
 def cons(head, tail):
     return Cons(head, tail)
 
-@fn
+@An.fn
 def cons_p(value):
     return isinstance(value, Cons)
 
-@fn
+@An.fn
 def head(cons):
     return cons.head
 
-@fn
+@An.fn
 def tail(cons):
     return cons.tail
+
+@An.builtin
+def uncons(cons):
+    return head(cons), tail(cons)
 
 def display_cons(value, symbols):
     parts = []
@@ -186,7 +190,7 @@ def display_cons(value, symbols):
 
 # ### Lists
 
-@fn
+@An.fn
 def list(*elems):
     if elems:
         head, *tail = elems
@@ -194,11 +198,11 @@ def list(*elems):
     else:
         return nil
 
-@fn
+@An.fn
 def list_p(value):
     return nil_p(value) or cons_p(value) and list_p(tail(value))
 
-@fn
+@An.fn
 def append(list, *lists):
     if not lists:
         return list
@@ -207,7 +211,7 @@ def append(list, *lists):
     value, next = head(list), tail(list)
     return cons(value, append(next, *lists))
 
-@fn
+@An.fn
 def len(list):
     l = 0
     while not nil_p(list):
@@ -240,7 +244,7 @@ class Procedure(object):
     def invocation_environment(self, *args):
         return Environment(zip(self.formals, args), self.environment)
 
-@fn
+@An.fn
 def procedure_p(value):
     return callable(value)
 

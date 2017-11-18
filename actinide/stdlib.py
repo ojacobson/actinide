@@ -2,59 +2,67 @@ import operator as op
 import functools as f
 
 from .types import *
-from .builtin import make_registry
+from .builtin import Registry
 
-ACTINIDE_BINDINGS, ACTINIDE_VOIDS, ACTINIDE_FNS, ACTINIDE_BUILTINS, bind, void, fn, builtin = make_registry()
+An = Registry()
 
-@fn
+@An.fn
 def __add__(*vals):
     return f.reduce(op.add, vals)
 
-@fn
+@An.fn
 def __sub__(val, *vals):
     if vals:
         return f.reduce(op.sub, (val, *vals))
     return op.neg(val)
 
-@fn
+@An.fn
 def __mul__(*vals):
     return f.reduce(op.mul, vals)
 
-@fn
+@An.fn
 def __floordiv__(*vals):
     div = op.floordiv
     if any(decimal_p(val) for val in vals):
         div = op.truediv
     return f.reduce(div, vals)
 
-@fn
+@An.fn
 def __eq__(a, b):
     return op.eq(a, b)
 
-@fn
+@An.fn
 def __ne__(a, b):
     return op.ne(a, b)
 
-@fn
+@An.fn
 def __lt__(a, b):
     return op.lt(a, b)
 
-@fn
+@An.fn
 def __le__(a, b):
     return op.le(a, b)
 
-@fn
+@An.fn
 def __gt__(a, b):
     return op.gt(a, b)
 
-@fn
+@An.fn
 def __ge__(a, b):
     return op.ge(a, b)
 
-@fn
+@An.fn
 def eq_p(a, b):
     return op.is_(a, b)
 
-@fn
+@An.fn
 def equal_p(a, b):
     return op.eq(a, b)
+
+@An.fn
+def and_(a, b):
+    return op.and_(a, b)
+
+@An.fn
+def or_(a, b):
+    return op.or_(a, b)

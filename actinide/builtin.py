@@ -15,13 +15,18 @@ dunder_names = {
     '__ge__': '>',
 }
 
+class BindError(Exception):
+    pass
+
 # Derives the lisp name of a python function or method handle, as follows:
 #
-# * Python dunder names are translated to their corresponding operator or
-#   symbol usind the ``dunder_names`` table.
+# * Python dunder names are translated to their corresponding operator or symbol
+#   usind the ``dunder_names`` table.
 #
 # * A trailing '_p' in the Python name is converted into a question mark in the
 #   lisp name.
+#
+# * A lone trailing '_' in the Python name stripped.
 #
 # * Any remaining underscores in the Python name are converted to dashes in the
 #   lisp name.
@@ -31,14 +36,19 @@ dunder_names = {
 def lisp_name(fn):
     name = fn.__name__
     if name == '<lambda>':
-        return None
+        raise BindError(f'Lambda {repr(fn)} has no name')
 
+    # Translate operators early, and throw out the existing name
     if name in dunder_names:
         return dunder_names[name]
 
     # Trailing _p is a predicate, translate to ?
     if name.endswith('_p'):
         name = name[:-2] + '?'
+
+    # Trailing _ is probably a name that conflicts with a python keyword
+    if name.endswith('_') and not name.endswith('__'):
+        name = name[:-1]
 
     # Remaining underscores are dashes
     name = name.replace('_', '-')
@@ -62,26 +72,25 @@ def wrap_fn(fn):
         return fn(*args),
     return wrapper
 
-def make_registry():
-    bindings = []
-    voids = []
-    fns = []
-    builtins = []
+# An Actinide registry allows its containing module to be loaded into a Session
+# to provide additional functions and syntax to code run in that Session.
 
-    def bind(name, val):
-        bindings.append((name, val))
-        return val
+class Registry(object):
+    def __init__(self):
+        self.bindings = []
 
-    def void(f):
-        voids.append(f)
+    def bind(self, name, value):
+        self.bindings.append((name, value))
+        return value
+
+    def void(self, f):
+        self.bind(lisp_name(f), wrap_void(f))
         return f
 
-    def fn(f):
-        fns.append(f)
+    def fn(self, f):
+        self.bind(lisp_name(f), wrap_fn(f))
         return f
 
-    def builtin(f):
-        builtins.append(f)
+    def builtin(self, f):
+        self.bind(lisp_name(f), f)
         return f
-
-    return bindings, voids, fns, builtins, bind, void, fn, builtin

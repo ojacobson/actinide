@@ -1,8 +1,8 @@
 import io
 
-from .builtin import make_registry
+from .builtin import Registry
 
-ACTINIDE_BINDINGS, ACTINIDE_VOIDS, ACTINIDE_FNS, ACTINIDE_BUILTINS, bind, void, fn, builtin = make_registry()
+An = Registry()
 
 # ## PORTS
 #
@@ -40,23 +40,23 @@ class Port(object):
 # Read at least 1 and up to ``n`` characters from a port. This consumes them
 # from the port: they are no longer available to future peeks or reads. ``n``
 # must be strictly positive.
-@fn
+@An.fn
 def read_port(port, n):
     return port.read(n)
 
 # Read all remaining input from a port, consuming it.
-@fn
+@An.fn
 def read_port_fully(port):
     return port.read_fully()
 
 # Read at least 1 and up to ``n`` characters from a port, without consuming
 # them. They will be available on future peeks and reads. ``n`` must be strictly
 # positive.
-@fn
+@An.fn
 def peek_port(port, n):
     return port.peek(n)
 
 # Create an input port from a string.
-@fn
+@An.fn
 def string_to_input_port(string):
     return Port(io.StringIO(string))

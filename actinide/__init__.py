@@ -44,12 +44,9 @@ class BaseSession(object):
         return symb
 
     def bind_module(self, module):
-        for name, binding in getattr(module, 'ACTINIDE_BINDINGS', []):
+        registry = module.An
+        for name, binding in registry.bindings:
             self.bind(name, binding)
-        for fn in getattr(module, 'ACTINIDE_FNS', []):
-            self.bind_fn(fn)
-        for builtin in getattr(module, 'ACTINIDE_BUILTINS', []):
-            self.bind_builtin(builtin)
 
     def get(self, symb):
         symb = self.symbol(symb)
