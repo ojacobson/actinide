@@ -66,3 +66,18 @@ def and_(a, b):
 @An.fn
 def or_(a, b):
     return op.or_(a, b)
+
+def let(symbols, bindings, *body):
+    if nil_p(bindings):
+        return list(*body)
+
+    binding, bindings = uncons(bindings)
+    name, value = flatten(binding)
+
+    return list(
+        append(
+            list(symbols['lambda'], list(name)),
+            let(symbols, bindings, *body),
+        ),
+        value
+    )

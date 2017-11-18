@@ -36,7 +36,7 @@ def expand_subforms(list, symbols, macros):
     if nil_p(list):
         return nil
     if not cons_p(list):
-        return expand_subforms(list, symbols, macros)
+        return list
     head, tail = uncons(list)
     return cons(
         expand(head, symbols, macros),

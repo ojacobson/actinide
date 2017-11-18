@@ -174,7 +174,10 @@ layer to map Python return values to Actinide value lists. The ``bind_void``
 helper ultimately calls that module's ``wrap_void`` to wrap the function, and
 ``bind_fn`` calls ``wrap_fn``. (Tuple-returning functions do not need to be
 wrapped.) If you prefer to manually bind functions using ``bind``, they must be
-wrapped appropriately.
+wrapped appropriately. An equivalent set of methods, ``macro_bind``,
+``macro_bind_void``, ``macro_bind_fn``, and ``macro_bind_builtin`` bind values
+to entries in the top-level macro table, instead of the top-level environment,
+and allow extension of the language's syntax.
 
 Finally, Actinide can bind specially-crafted Python modules. If a module
 contains a top-level symbol named ``An`` (for the informal chemical symbol for
@@ -200,6 +203,9 @@ The symbol must be bound to an instance of the ``Registry`` class from the
     @An.builtin
     def two_values():
         return 1, "Two"
+
+    # @An.macro_bind, @An.macro_void, @An.macro_fn, and @An.macro_builtin follow
+    # the same pattern.
 
 Going the other direction, values can be extracted from bindings in the session
 using the ``get`` method:

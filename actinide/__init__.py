@@ -37,16 +37,31 @@ class BaseSession(object):
 
     def bind_builtin(self, fn):
         name = builtin.lisp_name(fn)
-        if name is None:
-            raise ValueError("Anonymous functions must be bound using `bind`")
         symb = self.symbol(name)
         self.bind(symb, fn)
+        return symb
+
+    def macro_bind(self, symb, value):
+        self.macros[self.symbol(symb)] = value
+
+    def macro_bind_void(self, fn):
+        return self.macro_bind_builtin(builtin.wrap_void(fn))
+
+    def macro_bind_fn(self, fn):
+        return self.macro_bind_builtin(builtin.wrap_fn(fn))
+
+    def macro_bind_builtin(self, fn):
+        name = builtin.lisp_name(fn)
+        symb = self.symbol(name)
+        self.macro_bind(symb, fn)
         return symb
 
     def bind_module(self, module):
         registry = module.An
         for name, binding in registry.bindings:
             self.bind(name, binding)
+        for name, binding in registry.macros:
+            self.macro_bind(name, binding)
 
     def get(self, symb):
         symb = self.symbol(symb)
@@ -80,5 +95,8 @@ class BaseSession(object):
 
 class Session(BaseSession):
     def standard_library(self):
+        @self.macro_bind_fn
+        def let(bindings, *body):
+            return stdlib.let(self.symbols, bindings, *body)
         self.bind_module(stdlib)
         self.bind_module(ports)

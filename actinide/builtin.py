@@ -78,6 +78,7 @@ def wrap_fn(fn):
 class Registry(object):
     def __init__(self):
         self.bindings = []
+        self.macros = []
 
     def bind(self, name, value):
         self.bindings.append((name, value))
@@ -93,4 +94,20 @@ class Registry(object):
 
     def builtin(self, f):
         self.bind(lisp_name(f), f)
+        return f
+
+    def macro_bind(self, name, value):
+        self.macros.append((name, value))
+        return value
+
+    def macro_void(self, f):
+        self.macro_bind(lisp_name(f), wrap_void(f))
+        return f
+
+    def macro_fn(self, f):
+        self.macro_bind(lisp_name(f), wrap_fn(f))
+        return f
+
+    def macro_builtin(self, f):
+        self.macro_bind(lisp_name(f), f)
         return f
