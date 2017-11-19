@@ -105,7 +105,7 @@ def display_decimal(value):
 
 @An.fn
 def string(value):
-    return string(Value)
+    return str(value)
 
 @An.fn
 def string_p(value):
