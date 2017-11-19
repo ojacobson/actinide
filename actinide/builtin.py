@@ -79,6 +79,7 @@ class Registry(object):
     def __init__(self):
         self.bindings = []
         self.macros = []
+        self.evals = []
 
     def bind(self, name, value):
         self.bindings.append((name, value))
@@ -111,3 +112,6 @@ class Registry(object):
     def macro_builtin(self, f):
         self.macro_bind(lisp_name(f), f)
         return f
+
+    def eval(self, source):
+        self.evals.append(source)

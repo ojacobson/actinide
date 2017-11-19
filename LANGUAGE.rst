@@ -57,6 +57,19 @@ Forms
 
         * Examples: ``; this function is extremely spicy.``
 
+* Compound forms: conses and dotted pairs
+
+    * An opening ``(``, followed by a head subform, followed by spaces,
+      followed by a ``.``, followed by a tail subform, followed by a closing
+      ``)``.
+
+    * Represents a *cons* with the given head and tail.
+
+    * A dotted pair which appears as the head of a dotted pair does not require
+      an additional dot.
+
+    * Examples: ``(1 . 2)``, ``(1 2 . 3)``, ``(('ll . 'lr) . ('rl . 'rr))``
+
 * Compound forms: lists
 
     * An opening ``(``, followed by a sequence of "subforms" separated by
@@ -194,7 +207,10 @@ Lists that begin with one of the following symbols are evaluated specially.
   procedure value which can be used to apply the newly-defined procedure.
 
     * Must include a ``formals`` subform, which is generally a list of argument
-      names (as symbols).
+      names (as symbols). If the formals subform is a bare symbol, or a dotted
+      pair whose tail is a symbol, the function has variable arity, and all
+      arguments not assigned to a name from the formals list are collected into
+      a list and bound to that symbol.
 
     * May include a sequence of body subforms, which are evaluated in order (as
       if by ``begin``) whenever the function is applied.
@@ -233,6 +249,13 @@ Lists that begin with one of the following symbols are evaluated specially.
       evaluation is the sum of those arguments. This is a simple replacement
       for the ``+`` function itself, but it illustrates the idea that functions
       can include other functions.
+
+        ::
+
+            (lambda (a . b) b)
+
+      This defines a function which takes one or more arguments, whose
+      evaluation is the list of arguments other than the first.
 
 * ``define``: A ``define`` form sets the value of a new binding in the current
   environment. This has two forms:

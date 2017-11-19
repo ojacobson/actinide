@@ -1,5 +1,6 @@
 # ## Actinide Types
 
+import builtins as b
 from collections import namedtuple
 from decimal import Decimal, InvalidOperation
 
@@ -228,21 +229,49 @@ def flatten(list):
 
 # ### Procedures
 
+class ProcedureError(Exception):
+    pass
+
 class Procedure(object):
     def __init__(self, body, formals, environment, macros, symbols):
-        self.body = body
-        self.continuation = e.eval(body, symbols, None)
-        self.formals = formals
         self.environment = environment
         self.macros = macros
+        self.symbols = symbols
+        self.body = body
+        self.continuation = self.compile()
+        self.formals, self.tail_formal = self.parse_formals(formals)
+
+    def compile(self, continuation=None):
+        return e.eval(self.body, self.symbols, continuation)
+
+    def invocation_environment(self, *args):
+        if b.len(args) < b.len(self.formals) or \
+            b.len(args) > b.len(self.formals) and not self.tail_formal:
+            args_syntax = append(list(*self.formals), self.tail_formal)
+            call_syntax = list(*args)
+            raise ProcedureError(f'Procedure with arguments {display(args_syntax, self.symbols)} called with arguments {display(call_syntax, self.symbols)}')
+
+        named_args = b.list(zip(self.formals, args))
+        tail_arg = []
+        if self.tail_formal:
+            tail_list = list(*args[b.len(self.formals):])
+            tail_binding = (self.tail_formal, tail_list)
+            tail_arg.append(tail_binding)
+
+        return Environment(named_args + tail_arg, self.environment)
 
     def __call__(self, *args):
         call_env = self.invocation_environment(*args)
         call_macros = Environment(parent=self.macros)
         return e.run(self.continuation, call_env, call_macros, ())
 
-    def invocation_environment(self, *args):
-        return Environment(zip(self.formals, args), self.environment)
+    @classmethod
+    def parse_formals(cls, formals):
+        names = []
+        while not nil_p(formals) and cons_p(formals):
+            formal, formals = uncons(formals)
+            names.append(formal)
+        return names, formals
 
 @An.fn
 def procedure_p(value):
@@ -250,9 +279,9 @@ def procedure_p(value):
 
 def display_procedure(proc, symbols):
     if isinstance(proc, Procedure):
-        formals = ' '.join(display(formal, symbols) for formal in proc.formals)
+        formals = display(append(list(*proc.formals), proc.tail_formal), symbols)
         body = display(proc.body, symbols)
-        return f'<procedure: (lambda ({formals}) {body})>'
+        return f'<procedure: (lambda {formals} {body})>'
     return f'<builtin: {proc.__name__}>'
 
 # ### General-purpose functions

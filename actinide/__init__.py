@@ -62,6 +62,8 @@ class BaseSession(object):
             self.bind(name, binding)
         for name, binding in registry.macros:
             self.macro_bind(name, binding)
+        for source in registry.evals:
+            self.run(source)
 
     def get(self, symb):
         symb = self.symbol(symb)

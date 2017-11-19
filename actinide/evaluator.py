@@ -31,6 +31,12 @@ from . import types as t
 # exception bubbles up out of the interpreter and destroys the state of the
 # computation.
 
+# Raised if a form cannot be evaluated. This is generally raised as soon as an
+# unevaluatable form is detected by the compiler, which may be substantially
+# before the program would try to evaluate that form.
+class EvalError(Exception):
+    pass
+
 # Reduce a continuation to its final value.
 #
 # This iteratively calls the current continuation with the current arguments
@@ -77,8 +83,7 @@ def quote(quoted, continuation):
 # form. (The head of the lambda form must be discarded before calling this
 # factory.)
 def lambda_(defn, symbols, continuation):
-    formals = t.flatten(t.head(defn))
-    body = t.head(t.tail(defn))
+    formals, body = t.flatten(defn)
     def lambda__(env, macros):
         proc = t.Procedure(body, formals, env, macros, symbols)
         return (continuation, env, macros, proc)
@@ -182,8 +187,10 @@ def tail_graft(continuation, environment, macros, guarded):
 def eval(value, symbols, continuation):
     if t.symbol_p(value):
         return symbol(value, continuation)
-    if t.nil_p(value) or not t.list_p(value):
+    if t.nil_p(value) or not t.cons_p(value):
         return literal(value, continuation)
+    if not t.list_p(value):
+        raise EvalError("Cannot evaluate a dotted pair")
     # Special forms (all of which begin with a special symbol, discarded here)
     if t.head(value) == symbols['if']:
         return if_(t.tail(value), symbols, continuation)
