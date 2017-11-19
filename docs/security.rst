@@ -50,6 +50,8 @@ possible:
 
 * Python ``bool`` objects, used to represent Actinide booleans.
 
+* Python ``list`` objects, used to represent Actinide vectors.
+
 * The Python ``None`` constant, used to represent the empty list.
 
 The remaining built-in types are represented using classes:

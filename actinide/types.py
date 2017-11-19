@@ -227,6 +227,45 @@ def flatten(list):
         list = tail(list)
     return r
 
+# ### Vectors
+
+@An.fn
+def vector(*elems):
+    return b.list(elems)
+
+@An.fn
+def vector_p(value):
+    return isinstance(value, b.list)
+
+@An.fn
+def vector_to_list(value):
+    return list(*value)
+
+@An.fn
+def list_to_vector(value):
+    return flatten(list)
+
+@An.fn
+def vector_length(value):
+    return b.len(value)
+
+@An.fn
+def vector_get(value, index):
+    return value[index]
+
+@An.fn
+def vector_set(value, index, elem):
+    value[index] = elem
+    return value
+
+@An.fn
+def vector_add(value, *elems):
+    value.extend(elems)
+    return value
+
+def display_vector(value, symbols):
+    return f"<vector: [{' '.join(display(elem, symbols) for elem in value)}]>"
+
 # ### Procedures
 
 class ProcedureError(Exception):
@@ -306,6 +345,8 @@ def display(value, symbols):
         return display_decimal(value)
     if procedure_p(value):
         return display_procedure(value, symbols)
+    if vector_p(value):
+        return display_vector(value, symbols)
     # Give up and use repr to avoid printing `None`.
     return repr(value)
 
