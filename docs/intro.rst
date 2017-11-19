@@ -64,7 +64,7 @@ Concepts introduced:
 * Flow control forms (if, lambda)
 * Recursion
 
-Fibbonaci example.
+Factorial example.
 
 ************
 Fixing a bug
@@ -74,7 +74,7 @@ Concepts introduced:
 
 * *Tail* recursion and why it's special
 
-Redo fibboanci as a tail-recursive function.
+Redo factorial as a tail-recursive function.
 
 *********************
 Thinking functionally
@@ -85,7 +85,8 @@ Concepts introduced:
 * Higher-order functions and why they're important
 * Reduce
 
-Redo fibbonaci as a fold.
+Redo factorial as a fold.
 
-****
+************************
 Draw the rest of the owl
+************************
