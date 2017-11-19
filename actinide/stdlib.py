@@ -67,6 +67,10 @@ def and_(a, b):
 def or_(a, b):
     return op.or_(a, b)
 
+@An.fn
+def not_(a):
+    return not a
+
 def let(symbols, bindings, *body):
     if nil_p(bindings):
         return list(*body)
