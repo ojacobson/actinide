@@ -2,6 +2,8 @@
 The Actinide Programming Language
 #################################
 
+.. highlight:: scheme
+
 *****
 Forms
 *****

@@ -1,5 +1,5 @@
 ########
-SECURITY
+Security
 ########
 
 In the README, I made this strong claim:
