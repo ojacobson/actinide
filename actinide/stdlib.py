@@ -85,3 +85,7 @@ def let(symbols, bindings, *body):
         ),
         value
     )
+
+@An.fn
+def concat(*strings):
+    return ''.join(strings)

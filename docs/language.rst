@@ -15,8 +15,6 @@ Forms
 * A program is evaluated by *reducing* forms to produce a final value, applying
   side effects during the reduction.
 
-* What does a form look like?
-
     * Simple forms: literals (and intro to types)
 
         * Integers: an optional leading - sign for negative numbers, followed by a
