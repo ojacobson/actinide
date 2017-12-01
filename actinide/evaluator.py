@@ -217,7 +217,7 @@ def define(value, symbols, continuation, bind):
     symb, expr = t.flatten(value)
 
     if not t.symbol_p(symb):
-        raise RuntimeError("Argument to define not a symbol: {t.display(symb)}")
+        raise RuntimeError(f"Argument to define not a symbol: {t.display(symb, symbols)}")
 
     bind_cont = bind(symb, continuation)
     eval_cont = eval(expr, symbols, bind_cont)
