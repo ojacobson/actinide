@@ -108,11 +108,11 @@ def expand_quasiquoted(form, symbols):
     if not nil_p(first) and cons_p(first):
         candidate, body = uncons(first)
         if candidate == symbols['unquote-splicing']:
-            next, rest = uncons(body)
+            next, unquote_next = uncons(body)
             return list(
                 symbols['append'],
                 next,
-                expand_quasiquoted(body, symbols),
+                expand_quasiquoted(rest, symbols),
             )
     return list(
         symbols['cons'],
