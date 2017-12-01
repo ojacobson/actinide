@@ -16,6 +16,8 @@ class ExpansionError(Exception):
 def expand(form, symbols, macros):
     if nil_p(form) or not cons_p(form):
         return form
+    if head(form) == symbols['quote']:
+        return form
     if head(form) == symbols['if']:
         form = expand_if(form)
     elif head(form) == symbols['define']:
