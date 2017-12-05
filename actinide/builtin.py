@@ -12,7 +12,7 @@ dunder_names = {
     '__lt__': '<',
     '__le__': '<=',
     '__gt__': '>',
-    '__ge__': '>',
+    '__ge__': '>=',
 }
 
 class BindError(Exception):
