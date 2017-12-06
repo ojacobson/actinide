@@ -5,6 +5,10 @@ Actinide
 .. image:: https://circleci.com/gh/ojacobson/actinide.svg?style=svg
     :target: https://circleci.com/gh/ojacobson/actinide
 
+.. image:: https://readthedocs.org/projects/pip/badge/
+    :target: https://https://actinide.readthedocs.io/
+
+
 **An embeddable lisp for Python applications.**
 
 I had `an application`_ in which the ability to extend the application from
@@ -49,6 +53,18 @@ Requirements
 ************
 
 Actinide requires Python 3.6 or later.
+
+Building the documentation requires Sphinx, and should be done in a Python virtual environment:
+
+.. code-block:: bash
+
+    $ python3.6 -m venv .venv
+    $ source .venv/bin/activate
+    $ pip install -r requirements-docs.txt
+    $ make html
+    $ open _build/html/index.html # or any other command to launch a browser
+
+The documentation is also available online at https://actinide.readthedocs.io.
 
 ************
 Installation

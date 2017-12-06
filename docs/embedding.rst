@@ -78,8 +78,8 @@ will automatically determine the name to bind to:
     session.bind_fn(example)
     print(*session.run('(example)')) # prints "5"
 
-Finally, to bind a function returning a tuple of results, call
-``bind_builtin``. This will automatically determine the name to bind to:
+To bind a function returning a tuple of results, call ``bind_builtin``. This
+will automatically determine the name to bind to:
 
 .. code-block:: python
 
@@ -127,6 +127,11 @@ The symbol must be bound to an instance of the ``Registry`` class from the
     @An.builtin
     def two_values():
         return 1, "Two"
+
+    An.eval('''
+        (begin
+            (define (three-values) (values 1 2 3)))
+    ''')
 
     # @An.macro_bind, @An.macro_void, @An.macro_fn, and @An.macro_builtin follow
     # the same pattern.

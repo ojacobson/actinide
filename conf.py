@@ -89,7 +89,11 @@ html_theme = 'alabaster'
 # further.  For a list of options available for each theme, see the
 # documentation.
 #
-# html_theme_options = {}
+html_theme_options = {
+    'github_button': True,
+    'github_user':'ojacobson',
+    'github_repo': 'actinide',
+}
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
@@ -103,6 +107,8 @@ html_static_path = ['_static']
 # refs: http://alabaster.readthedocs.io/en/latest/installation.html#sidebars
 html_sidebars = {
     '**': [
+        'globaltoc.html',
+        'localtoc.html',
         'relations.html',  # needs 'show_related': True theme option to display
         'searchbox.html',
     ]
