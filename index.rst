@@ -4,5 +4,6 @@
 
    docs/intro
    docs/language
+   docs/builtin
    docs/embedding
    docs/security

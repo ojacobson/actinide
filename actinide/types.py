@@ -24,10 +24,6 @@ nil = An.bind('nil', None)
 def nil_p(value):
     return value is None
 
-@An.fn
-def read_nil(value):
-    return nil
-
 def display_nil(value):
     return '()'
 
@@ -42,7 +38,6 @@ false = An.bind('#f', False)
 def boolean_p(value):
     return value is true or value is false
 
-@An.fn
 def read_boolean(value):
     if value == '#t':
         return true
@@ -67,7 +62,6 @@ def integer(value):
 def integer_p(value):
     return isinstance(value, int)
 
-@An.fn
 def read_integer(value):
     try:
         return integer(value)
@@ -89,7 +83,6 @@ def decimal(value):
 def decimal_p(value):
     return isinstance(value, Decimal)
 
-@An.fn
 def read_decimal(value):
     try:
         return decimal(value)
@@ -111,7 +104,6 @@ def string(value):
 def string_p(value):
     return not symbol_p(value) and isinstance(value, str)
 
-@An.fn
 def read_string(value):
     value = value[1:-1]
     value = value.replace('\\"', '"')
@@ -146,7 +138,6 @@ def symbol(string, symbol_table):
 def symbol_p(value):
     return isinstance(value, Symbol)
 
-@An.fn
 def read_symbol(value, symbol_table):
     return symbol(value, symbol_table)
 
@@ -213,7 +204,7 @@ def append(list, *lists):
     return cons(value, append(next, *lists))
 
 @An.fn
-def len(list):
+def length(list):
     l = 0
     while not nil_p(list):
         l += 1

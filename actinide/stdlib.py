@@ -60,20 +60,26 @@ def equal_p(a, b):
     return op.eq(a, b)
 
 @An.fn
-def and_(a, b):
-    return op.and_(a, b)
+def and_(*vals):
+    return all(vals)
 
 @An.fn
-def or_(a, b):
-    return op.or_(a, b)
+def or_(*vals):
+    return any(vals)
 
 @An.fn
 def not_(a):
     return not a
 
 def let(symbols, bindings, *body):
+    def beginify(*forms):
+        if len(forms) == 1:
+            form, = forms
+            return form
+        return list(symbols['begin'], *forms)
+
     if nil_p(bindings):
-        return list(*body)
+        return beginify(*body)
 
     binding, bindings = uncons(bindings)
     name, value = flatten(binding)
@@ -81,7 +87,7 @@ def let(symbols, bindings, *body):
     return list(
         append(
             list(symbols['lambda'], list(name)),
-            let(symbols, bindings, *body),
+            list(let(symbols, bindings, *body)),
         ),
         value
     )
