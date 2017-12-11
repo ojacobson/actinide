@@ -526,6 +526,27 @@ Returns:
 Expands a form, applying macro expansion and converting shorthand forms into
 their longhand equivalents.
 
+filter
+~~~~~~
+
+Syntax:
+
+.. code-block:: scheme
+
+    (filter fn list)
+
+Arguments:
+
+* ``fn``: a boolean function taking one argument.
+* ``list``: any list.
+
+Returns:
+
+* A list, which contains a subset of the entries from ``list``.
+
+The resulting list contains only the values ``v`` from ``list`` where ``(fn
+v)`` is true.
+
 .. _head:
 
 head
@@ -722,6 +743,27 @@ Returns:
 
 * A vector containing the same elements as ``list``, in the same order.
 
+map
+~~~
+
+Syntax:
+
+.. code-block:: map
+
+    (map fn list)
+
+Arguments:
+
+* ``fn``: any procedure accepting one value and returning one value.
+* ``list``: any list.
+
+Returns:
+
+* A list of results.
+
+Applies ``fn`` to each element of ``list``, returning a list of the resulting
+values in the same order.
+
 .. _nil:
 
 nil
@@ -900,6 +942,29 @@ Returns:
 This consumes the characters returned - they will not be returned in future
 calls to ``peek-port`` or ``read-port`` on the same port. If the port is fully
 consumed, this will return the empty string.
+
+reduce
+~~~~~~
+
+Syntax:
+
+.. code-block:: scheme
+
+    (reduce fn list)
+
+Arguments:
+
+* ``fn``: any procedure taking two arguments and returning one value.
+* ``list``: any non-empty list.
+
+Returns:
+
+* The result of reducing the list through ``fn``, in left-to-right order.
+
+This passes the first two elements of ``list`` to ``fn``, then passes the
+result and the third element of ``list`` to ``fn``, and so on, until the list
+is exhausted, and returns the result. As a special case, if ``list`` has a
+single element, this returns it as-is.
 
 .. _string:
 

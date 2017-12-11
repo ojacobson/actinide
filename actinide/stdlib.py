@@ -95,3 +95,21 @@ def let(symbols, bindings, *body):
 @An.fn
 def concat(*strings):
     return ''.join(strings)
+
+def single_valued(fn):
+    def wrapper(*args, **kwargs):
+        result, = fn(*args, **kwargs)
+        return result
+    return wrapper
+
+@An.fn
+def filter(pred, vals):
+    return list(*b.filter(single_valued(pred), flatten(vals)))
+
+@An.fn
+def map(fn, vals):
+    return list(*b.map(single_valued(fn), flatten(vals)))
+
+@An.fn
+def reduce(fn, vals):
+    return f.reduce(single_valued(fn), flatten(vals))
