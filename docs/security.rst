@@ -5,11 +5,18 @@ Security
 In the README, I made this strong claim:
 
     It provides minimal safety features, but the restricted set of builtins
-    ensures that Actinide programs cannot gain access to the outside context of
-    the program. The worst they can do is waste CPU time, fill up RAM, and
-    drain your battery.
+    ensures that Actinide programs probably cannot gain access to the outside
+    context of the program. The worst they can do is waste CPU time, fill up
+    RAM, and drain your battery.
 
-This document expands on the underlying design choices used to support that goal.
+This document expands on the underlying design choices used to support that
+goal.
+
+**I do not promise that Actinide is any more secure than other embeddable
+languages**. If you are relying on Actinide to sandbox programs, you do so at
+your own risk. If you find a way to escape the sandbox, I very much want to know
+about it, and I'll do my best to address it and to communicate this risk to
+other users.
 
 **************
 Specific Goals
@@ -69,9 +76,10 @@ The remaining built-in types are represented using classes:
 
 * Instances of the ``actinide.ports.Port`` class, which wraps an arbitrary
   ``file`` object to restrict the operations available. The only built-in
-  mechanism for creating a ``Port`` creates one which wraps a string; it is not
-  possible to open port to a file, shared memory segment, pipe, process,
-  socket, or to any other OS resource using only built-in functions and types.
+  mechanism for creating a ``Port`` creates one which wraps a string. There are
+  no built-in capabilities to open ports that represent files, shared memory
+  segments, pipes, processes, sockets, or any other OS resources using only
+  built-in functions and types.
 
 * Instances of the ``actinide.types.Procedure`` class, which is considerably
   more complex than the other types. This class handles the mechanics of

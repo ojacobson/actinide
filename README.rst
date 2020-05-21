@@ -42,9 +42,9 @@ So I wrote my own. This is that language.
 
 This is a tiny lisp, along the lines of Peter Norvig's `lispy`_, designed to be
 embedded within Python programs. It provides minimal safety features, but the
-restricted set of builtins ensures that Actinide programs cannot gain access to
-the outside context of the program. The worst they can do is waste CPU time,
-fill up RAM, and drain your battery.
+restricted set of builtins ensures that Actinide programs **probably** cannot
+gain access to the outside context of the program. The worst they can do is
+waste CPU time, fill up RAM, and drain your battery.
 
 .. _lispy: http://norvig.com/lispy.html
 
